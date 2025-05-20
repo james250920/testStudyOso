@@ -1,5 +1,6 @@
 package esan.mendoza.teststudyoso.navigation
 
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
@@ -17,30 +18,22 @@ import esan.mendoza.teststudyoso.presentation.viewModel.TipoPruebaViewModel
 
 @Composable
 fun NavegacionApp(
-    usuarioViewModel: UsuarioViewModel,
-    cursoViewModel: CursoViewModel,
-    tareaViewModel: TareaViewModel,
-    calificacionViewModel: CalificacionViewModel,
-    horarioViewModel: HorarioViewModel,
 
 ) {
     val navController = rememberNavController()
-    NavHost(navController = navController, startDestination = "home") {
-        composable("landing") {
-            StudyOsoLandingScreen(navController)
-        }
-        composable("register") {
-            RegisterScreen(
-                usuarioViewModel,
-                navController,
-
-            )
-        }
-        composable("home") {
-            Home(
-            )
-        }
-
+    NavHost(navController = navController, startDestination = "landing") {
+        composable("landing") {StudyOsoLandingScreen(navController)}
+        composable("register") { RegisterScreen(navController) }
+        composable("home") { Home(navController)}
+        composable("login") {LoginScreen(navController )}
+        composable("perfil") {PerfilScreen()}
+        composable("configuracion") { ConfiguracionScreen()}
+        composable("pomodoro") {PomodoroScreen()}
+        composable("AgregarCursos"){}
+        composable("Calificaciones") {}
+        composable("ListaTareas") {}
+        composable("MatrizEisenhower"){}
+        composable("Calendario") {}
     }
 }
 

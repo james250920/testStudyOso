@@ -10,7 +10,9 @@ import androidx.navigation.NavHostController
 import kotlinx.coroutines.delay
 
 @Composable
-fun PomodoroScreen( modifier: Modifier) {
+fun PomodoroScreen(
+    modifier: Modifier = Modifier
+) {
     var timeLeft by remember { mutableStateOf(25 * 60) } // 25 minutos en segundos
     var isRunning by remember { mutableStateOf(false) }
 

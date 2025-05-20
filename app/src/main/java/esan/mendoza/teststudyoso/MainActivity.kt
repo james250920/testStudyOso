@@ -39,11 +39,7 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     NavegacionApp(
-                        usuarioViewModel,
-                        cursoViewModel,
-                        tareaViewModel,
-                        calificacionViewModel,
-                        horarioViewModel,
+
                     )
                 }
             }

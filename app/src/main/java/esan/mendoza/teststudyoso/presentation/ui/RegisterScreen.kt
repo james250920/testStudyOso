@@ -12,13 +12,18 @@ import esan.mendoza.teststudyoso.presentation.viewModel.UsuarioViewModel
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import esan.mendoza.teststudyoso.data.entity.Usuario
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RegisterScreen(viewModel: UsuarioViewModel, navController: NavHostController) {
+fun RegisterScreen(
+    navController: NavController
+) {
     var nombre by remember { mutableStateOf(TextFieldValue("")) }
     var apellido by remember { mutableStateOf(TextFieldValue("")) }
     var correo by remember { mutableStateOf(TextFieldValue("")) }
@@ -72,31 +77,27 @@ fun RegisterScreen(viewModel: UsuarioViewModel, navController: NavHostController
             )
             OutlinedTextField(
                 value = fechaNacimiento,
-                onValueChange = { /* Solo editable vía DatePicker */ },
-                label = { Text("Fecha de Nacimiento (yyyy-MM-dd)") },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = false,
+                onValueChange = { fechaNacimiento = it },
+                label = { Text("fechaNacimiento(yyyy-mm-dd)") },
+                visualTransformation = PasswordVisualTransformation(),
+                modifier = Modifier.fillMaxWidth()
             )
             Button(
                 onClick = {
-
-                    viewModel.insert(
-                        Usuario(
-                            nombre = nombre.text,
-                            apellido = apellido.text,
-                            correo = correo.text,
-                            contrasena = contrasena.text,
-                            fechaNacimiento = fechaNacimiento.text
-                        )
-                    )
-                    navController.navigate("course_list") {
+                    navController.navigate("login") {
                         popUpTo("register") { inclusive = true }
                     }
                 },
-                modifier = Modifier.align(Alignment.End)
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Registrarse")
             }
+            TextButton(
+                onClick = { navController.navigate("login") }
+            ) {
+                Text("¿tienes cuenta? Iniciar Sesión")
+            }
+
         }
     }
 }

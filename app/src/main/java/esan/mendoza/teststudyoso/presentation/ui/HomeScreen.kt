@@ -29,37 +29,38 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import esan.mendoza.teststudyoso.R
 import kotlinx.coroutines.launch
 import esan.mendoza.teststudyoso.navigation.DrawerContent
+import esan.mendoza.teststudyoso.presentation.viewModel.UsuarioViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Home(
-) {
-    var selectedOption by remember { mutableStateOf("Inicio") }
+fun Home(navController: NavController) {
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+    var selectedScreen by remember { mutableStateOf("Principal") }
 
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
             ModalDrawerSheet {
-                Column(
-                    modifier = Modifier
-                        .padding(horizontal = 16.dp)
-                        .fillMaxHeight()
-                        .verticalScroll(rememberScrollState())
-                ) {
-                    DrawerContent(
-                        onOptionSelected = { option ->
-                            selectedOption = option
-                            scope.launch { drawerState.close() }
+                DrawerContent(
+                    selectedScreen = selectedScreen, // Pasar selectedScreen
+                    onOptionSelected = { option ->
+                        when (option) {
+                            "Perfil" -> selectedScreen = "Perfil"
+                            "Dashboard" -> selectedScreen = "Dashboard"
+                            "Configuración" -> selectedScreen = "Configuración"
+                            "Pomodoro" -> selectedScreen = "Pomodoro"
+                            "Cerrar Sesión" -> navController.navigate("login") { popUpTo(0) }
                         }
-                    )
-                }
+                        scope.launch { drawerState.close() }
+                    }
+                )
             }
         }
     ) {
@@ -73,26 +74,17 @@ fun Home(
                                 imageVector = Icons.Filled.Menu,
                                 contentDescription = "Menú",
                                 tint = MaterialTheme.colorScheme.onPrimary,
-                                modifier = Modifier.size(64.dp)
+                                modifier = Modifier.size(32.dp)
                             )
                         }
                     },
                     actions = {
-                        IconButton(onClick = { selectedOption = "Perfil" }) {
-                            Icon(
-                                imageVector = Icons.Filled.WbSunny,
-                                contentDescription = "Perfil",
-                                tint = MaterialTheme.colorScheme.onPrimary,
-                                modifier = Modifier.size(64.dp).padding(end = 8.dp)
-                            )
-                        }
-                        Spacer(modifier = Modifier.padding(8.dp))
-                        IconButton(onClick = { selectedOption = "Perfil" }) {
+                        IconButton(onClick = { selectedScreen = "Perfil" }) {
                             Icon(
                                 imageVector = Icons.Filled.AccountCircle,
                                 contentDescription = "Perfil",
                                 tint = MaterialTheme.colorScheme.onPrimary,
-                                modifier = Modifier.size(64.dp).padding(end = 8.dp)
+                                modifier = Modifier.size(32.dp)
                             )
                         }
                     },
@@ -106,72 +98,74 @@ fun Home(
                 BottomAppBar(
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier.height(100.dp)
+                    modifier = Modifier.height(80.dp)
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceEvenly,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        IconButton(
-                            onClick = { selectedOption = "Inicio" },
-                            modifier = Modifier.size(48.dp)
-                        ) {
+                        IconButton(onClick = { selectedScreen = "Dashboard" }, modifier = Modifier.size(48.dp)) {
                             Icon(
                                 imageVector = Icons.Filled.Analytics,
                                 contentDescription = "dashboard",
-                                modifier = Modifier.size(64.dp)
+                                tint = if (selectedScreen == "Dashboard") Color(0xFFFFA500) else Color.White,
+                                modifier = Modifier.size(32.dp)
                             )
                         }
-                        IconButton(
-                            onClick = { selectedOption = "Pomodoro" },
-                            modifier = Modifier.size(48.dp)
-                        ) {
+                        IconButton(onClick = { selectedScreen = "Pomodoro" }, modifier = Modifier.size(48.dp)) {
                             Icon(
                                 painter = painterResource(id = R.drawable.book_clock),
                                 contentDescription = "pomodoro",
-                                modifier = Modifier.size(64.dp)
+                                tint = if (selectedScreen == "Pomodoro") Color(0xFFFFA500) else Color.White,
+                                modifier = Modifier.size(32.dp)
                             )
                         }
-                        IconButton(
-                            onClick = { selectedOption = "Inicio" },
-                            modifier = Modifier.size(48.dp)
-                        ) {
+                        IconButton(onClick = { selectedScreen = "Principal" }, modifier = Modifier.size(48.dp)) {
                             Icon(
                                 painter = painterResource(id = R.drawable.home),
                                 contentDescription = "home",
-                                modifier = Modifier.size(64.dp)
+                                tint = if (selectedScreen == "Principal") Color(0xFFFFA500) else Color.White,
+                                modifier = Modifier.size(32.dp)
                             )
                         }
-                        IconButton(
-                            onClick = { selectedOption = "Configuración" },
-                            modifier = Modifier.size(48.dp)
-                        ) {
+                        IconButton(onClick = { selectedScreen = "Calificaciones" }, modifier = Modifier.size(48.dp)) {
                             Icon(
                                 painter = painterResource(id = R.drawable.calificacion),
-                                contentDescription = "listcalificaciones",
-                                modifier = Modifier.size(64.dp)
+                                contentDescription = "calificaciones",
+                                tint = if (selectedScreen == "Calificaciones") Color(0xFFFFA500) else Color.White,
+                                modifier = Modifier.size(32.dp)
                             )
                         }
-                        IconButton(
-                            onClick = { selectedOption = "Inicio" },
-                            modifier = Modifier.size(48.dp)
-                        ) {
+                        IconButton(onClick = { selectedScreen = "ListaTareas" }, modifier = Modifier.size(48.dp)) {
                             Icon(
                                 imageVector = Icons.Filled.AddCircleOutline,
-                                contentDescription = "addtarea",
-                                modifier = Modifier.size(64.dp)
+                                contentDescription = "lista_tareas",
+                                tint = if (selectedScreen == "ListaTareas") Color(0xFFFFA500) else Color.White,
+                                modifier = Modifier.size(32.dp)
                             )
                         }
                     }
                 }
             }
         ) { innerPadding ->
-            when (selectedOption) {
-                "Inicio" -> PrincipalScreen(Modifier.padding(innerPadding))
+            when (selectedScreen) {
+                "Principal" -> PrincipalScreen(
+                    modifier = Modifier.padding(innerPadding),
+                    onScreenSelected = { screen -> selectedScreen = screen }
+                )
+                "Dashboard" -> DashboardScreen(
+                    modifier = Modifier.padding(innerPadding),
+                    onScreenSelected = { screen -> selectedScreen = screen }
+                )
                 "Perfil" -> PerfilScreen(Modifier.padding(innerPadding))
                 "Configuración" -> ConfiguracionScreen(Modifier.padding(innerPadding))
                 "Pomodoro" -> PomodoroScreen(Modifier.padding(innerPadding))
+                "AgregarCursos" -> AgregarCursosScreen(Modifier.padding(innerPadding))
+                "Calificaciones" -> CalificacionesScreen(Modifier.padding(innerPadding))
+                "ListaTareas" -> ListaTareasScreen(Modifier.padding(innerPadding))
+                "MatrizEisenhower" -> MatrizEisenhowerScreen(Modifier.padding(innerPadding))
+                "Calendario" -> CalendarioScreen(Modifier.padding(innerPadding))
             }
         }
     }
@@ -179,50 +173,4 @@ fun Home(
 
 
 
-@Composable
-fun PerfilScreen(modifier: Modifier) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Icon(
-            imageVector = Icons.Filled.AccountCircle,
-            contentDescription = "Perfil",
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(64.dp)
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = "Pantalla de Perfil",
-            style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-    }
-}
 
-@Composable
-fun ConfiguracionScreen(modifier: Modifier) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Icon(
-            imageVector = Icons.Filled.Settings,
-            contentDescription = "Configuración",
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(64.dp)
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = "Pantalla de Configuración",
-            style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-    }
-}
