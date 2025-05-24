@@ -9,45 +9,29 @@ import esan.mendoza.teststudyoso.data.db.AppDatabase
 import esan.mendoza.teststudyoso.data.entity.Tarea
 import esan.mendoza.teststudyoso.data.repository.TareaRepository
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 
-class TareaViewModel(
-    private val repository: TareaRepository
-) : ViewModel() {
+class TareaViewModel(private val repository: TareaRepository) : ViewModel() {
 
-    fun insert(tarea: Tarea) = viewModelScope.launch(Dispatchers.IO) {
-        repository.insert(tarea)
+    private val _tareas = MutableStateFlow<List<Tarea>>(emptyList())
+    val tareas: StateFlow<List<Tarea>> = _tareas.asStateFlow()
+
+    fun cargarTareas(idUsuario: Int) = viewModelScope.launch {
+        val lista = repository.obtenerPorUsuario(idUsuario)
+        _tareas.value = lista
     }
 
-    fun update(tarea: Tarea) = viewModelScope.launch(Dispatchers.IO) {
-        repository.update(tarea)
+    fun insertarTarea(tarea: Tarea) = viewModelScope.launch {
+        repository.insertar(tarea)
+        cargarTareas(tarea.idUsuario)
     }
 
-    fun delete(tarea: Tarea) = viewModelScope.launch(Dispatchers.IO) {
-        repository.delete(tarea)
-    }
-
-    fun getTareasByUsuario(idUsuario: Int): LiveData<List<Tarea>> {
-        return repository.getTareasByUsuario(idUsuario)
-    }
-
-    fun getTareasByCurso(idCurso: Int?): LiveData<List<Tarea>> {
-        return repository.getTareasByCurso(idCurso)
-    }
-
-    fun getTareasByEstado(estado: String): LiveData<List<Tarea>> {
-        return repository.getTareasByEstado(estado)
-    }
-}
-
-class TareaViewModelFactory(private val context: Context) : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(TareaViewModel::class.java)) {
-            val db = AppDatabase.getDatabase(context)
-            @Suppress("UNCHECKED_CAST")
-            return TareaViewModel(TareaRepository(context, db.tareaDao())) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
+    fun eliminarTarea(tarea: Tarea) = viewModelScope.launch {
+        repository.eliminar(tarea)
+        cargarTareas(tarea.idUsuario)
     }
 }

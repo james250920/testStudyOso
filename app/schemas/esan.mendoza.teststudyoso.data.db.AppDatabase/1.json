@@ -2,15 +2,15 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "683a481d13ede5fb17b2e45d7e787ba1",
+    "identityHash": "85177f7f689f2ff49ff8cfa62d44818a",
     "entities": [
       {
-        "tableName": "usuarios",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id_usuario` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `nombre` TEXT NOT NULL, `apellido` TEXT NOT NULL, `fecha_nacimiento` INTEGER, `correo` TEXT NOT NULL, `contrasena` TEXT NOT NULL)",
+        "tableName": "usuario",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`idUsuario` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `nombre` TEXT NOT NULL, `apellido` TEXT NOT NULL, `fechaNacimiento` TEXT NOT NULL, `correo` TEXT NOT NULL, `contrasena` TEXT NOT NULL)",
         "fields": [
           {
             "fieldPath": "idUsuario",
-            "columnName": "id_usuario",
+            "columnName": "idUsuario",
             "affinity": "INTEGER",
             "notNull": true
           },
@@ -28,8 +28,9 @@
           },
           {
             "fieldPath": "fechaNacimiento",
-            "columnName": "fecha_nacimiento",
-            "affinity": "INTEGER"
+            "columnName": "fechaNacimiento",
+            "affinity": "TEXT",
+            "notNull": true
           },
           {
             "fieldPath": "correo",
@@ -47,34 +48,34 @@
         "primaryKey": {
           "autoGenerate": true,
           "columnNames": [
-            "id_usuario"
+            "idUsuario"
           ]
         },
         "indices": [
           {
-            "name": "index_usuarios_correo",
+            "name": "index_usuario_correo",
             "unique": true,
             "columnNames": [
               "correo"
             ],
             "orders": [],
-            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_usuarios_correo` ON `${TABLE_NAME}` (`correo`)"
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_usuario_correo` ON `${TABLE_NAME}` (`correo`)"
           }
         ]
       },
       {
-        "tableName": "cursos",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id_curso` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `nombre_curso` TEXT NOT NULL, `color` TEXT, `profesor` TEXT, `aula` TEXT, `creditos` INTEGER, `id_usuario` INTEGER NOT NULL, FOREIGN KEY(`id_usuario`) REFERENCES `usuarios`(`id_usuario`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "tableName": "Curso",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`idCurso` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `nombreCurso` TEXT NOT NULL, `color` TEXT, `profesor` TEXT, `aula` TEXT, `creditos` INTEGER, `idUsuario` INTEGER NOT NULL, FOREIGN KEY(`idUsuario`) REFERENCES `usuario`(`idUsuario`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "idCurso",
-            "columnName": "id_curso",
+            "columnName": "idCurso",
             "affinity": "INTEGER",
             "notNull": true
           },
           {
             "fieldPath": "nombreCurso",
-            "columnName": "nombre_curso",
+            "columnName": "nombreCurso",
             "affinity": "TEXT",
             "notNull": true
           },
@@ -100,7 +101,7 @@
           },
           {
             "fieldPath": "idUsuario",
-            "columnName": "id_usuario",
+            "columnName": "idUsuario",
             "affinity": "INTEGER",
             "notNull": true
           }
@@ -108,85 +109,85 @@
         "primaryKey": {
           "autoGenerate": true,
           "columnNames": [
-            "id_curso"
+            "idCurso"
           ]
         },
         "foreignKeys": [
           {
-            "table": "usuarios",
+            "table": "usuario",
             "onDelete": "CASCADE",
             "onUpdate": "NO ACTION",
             "columns": [
-              "id_usuario"
+              "idUsuario"
             ],
             "referencedColumns": [
-              "id_usuario"
+              "idUsuario"
             ]
           }
         ]
       },
       {
-        "tableName": "horarios",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id_horario` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `id_curso` INTEGER NOT NULL, `dia_semana` TEXT NOT NULL, `hora_inicio` TEXT NOT NULL, `hora_fin` TEXT NOT NULL, FOREIGN KEY(`id_curso`) REFERENCES `cursos`(`id_curso`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "tableName": "TipoPrueba",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`idTipoPrueba` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `idCurso` TEXT NOT NULL, `nombreTipo` TEXT NOT NULL, `cantidadPruebas` INTEGER NOT NULL, `pesoTotal` REAL NOT NULL, FOREIGN KEY(`idCurso`) REFERENCES `Curso`(`idCurso`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
-            "fieldPath": "idHorario",
-            "columnName": "id_horario",
+            "fieldPath": "idTipoPrueba",
+            "columnName": "idTipoPrueba",
             "affinity": "INTEGER",
             "notNull": true
           },
           {
             "fieldPath": "idCurso",
-            "columnName": "id_curso",
+            "columnName": "idCurso",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nombreTipo",
+            "columnName": "nombreTipo",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "cantidadPruebas",
+            "columnName": "cantidadPruebas",
             "affinity": "INTEGER",
             "notNull": true
           },
           {
-            "fieldPath": "diaSemana",
-            "columnName": "dia_semana",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "horaInicio",
-            "columnName": "hora_inicio",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "horaFin",
-            "columnName": "hora_fin",
-            "affinity": "TEXT",
+            "fieldPath": "pesoTotal",
+            "columnName": "pesoTotal",
+            "affinity": "REAL",
             "notNull": true
           }
         ],
         "primaryKey": {
           "autoGenerate": true,
           "columnNames": [
-            "id_horario"
+            "idTipoPrueba"
           ]
         },
         "foreignKeys": [
           {
-            "table": "cursos",
+            "table": "Curso",
             "onDelete": "CASCADE",
             "onUpdate": "NO ACTION",
             "columns": [
-              "id_curso"
+              "idCurso"
             ],
             "referencedColumns": [
-              "id_curso"
+              "idCurso"
             ]
           }
         ]
       },
       {
-        "tableName": "tareas",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id_tarea` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `descripcion` TEXT NOT NULL, `es_importante` INTEGER, `es_urgente` INTEGER, `fecha_vencimiento` INTEGER, `fecha_creacion` INTEGER, `estado` TEXT NOT NULL DEFAULT 'Pendiente', `id_usuario` INTEGER NOT NULL, `id_curso` INTEGER, FOREIGN KEY(`id_usuario`) REFERENCES `usuarios`(`id_usuario`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`id_curso`) REFERENCES `cursos`(`id_curso`) ON UPDATE NO ACTION ON DELETE SET NULL )",
+        "tableName": "Tarea",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`idTarea` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `descripcion` TEXT NOT NULL, `esImportante` INTEGER, `esUrgente` INTEGER, `fechaVencimiento` INTEGER, `fechaCreacion` INTEGER, `estado` TEXT NOT NULL, `idUsuario` INTEGER NOT NULL, `idCurso` INTEGER, FOREIGN KEY(`idUsuario`) REFERENCES `usuario`(`idUsuario`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`idCurso`) REFERENCES `Curso`(`idCurso`) ON UPDATE NO ACTION ON DELETE SET NULL )",
         "fields": [
           {
             "fieldPath": "idTarea",
-            "columnName": "id_tarea",
+            "columnName": "idTarea",
             "affinity": "INTEGER",
             "notNull": true
           },
@@ -198,190 +199,189 @@
           },
           {
             "fieldPath": "esImportante",
-            "columnName": "es_importante",
+            "columnName": "esImportante",
             "affinity": "INTEGER"
           },
           {
             "fieldPath": "esUrgente",
-            "columnName": "es_urgente",
+            "columnName": "esUrgente",
             "affinity": "INTEGER"
           },
           {
             "fieldPath": "fechaVencimiento",
-            "columnName": "fecha_vencimiento",
+            "columnName": "fechaVencimiento",
             "affinity": "INTEGER"
           },
           {
             "fieldPath": "fechaCreacion",
-            "columnName": "fecha_creacion",
+            "columnName": "fechaCreacion",
             "affinity": "INTEGER"
           },
           {
             "fieldPath": "estado",
             "columnName": "estado",
             "affinity": "TEXT",
-            "notNull": true,
-            "defaultValue": "'Pendiente'"
+            "notNull": true
           },
           {
             "fieldPath": "idUsuario",
-            "columnName": "id_usuario",
+            "columnName": "idUsuario",
             "affinity": "INTEGER",
             "notNull": true
           },
           {
             "fieldPath": "idCurso",
-            "columnName": "id_curso",
+            "columnName": "idCurso",
             "affinity": "INTEGER"
           }
         ],
         "primaryKey": {
           "autoGenerate": true,
           "columnNames": [
-            "id_tarea"
+            "idTarea"
           ]
         },
         "foreignKeys": [
           {
-            "table": "usuarios",
+            "table": "usuario",
             "onDelete": "CASCADE",
             "onUpdate": "NO ACTION",
             "columns": [
-              "id_usuario"
+              "idUsuario"
             ],
             "referencedColumns": [
-              "id_usuario"
+              "idUsuario"
             ]
           },
           {
-            "table": "cursos",
+            "table": "Curso",
             "onDelete": "SET NULL",
             "onUpdate": "NO ACTION",
             "columns": [
-              "id_curso"
+              "idCurso"
             ],
             "referencedColumns": [
-              "id_curso"
+              "idCurso"
             ]
           }
         ]
       },
       {
-        "tableName": "tipos_prueba",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id_tipo_prueba` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `id_curso` INTEGER NOT NULL, `nombre_tipo` TEXT NOT NULL, `cantidad_pruebas` INTEGER NOT NULL, `peso_total` REAL NOT NULL, FOREIGN KEY(`id_curso`) REFERENCES `cursos`(`id_curso`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "tableName": "Horario",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`idHorario` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `idCurso` INTEGER NOT NULL, `diaSemana` TEXT NOT NULL, `horaInicio` TEXT NOT NULL, `horaFin` TEXT NOT NULL, FOREIGN KEY(`idCurso`) REFERENCES `Curso`(`idCurso`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
-            "fieldPath": "idTipoPrueba",
-            "columnName": "id_tipo_prueba",
+            "fieldPath": "idHorario",
+            "columnName": "idHorario",
             "affinity": "INTEGER",
             "notNull": true
           },
           {
             "fieldPath": "idCurso",
-            "columnName": "id_curso",
+            "columnName": "idCurso",
             "affinity": "INTEGER",
             "notNull": true
           },
           {
-            "fieldPath": "nombreTipo",
-            "columnName": "nombre_tipo",
+            "fieldPath": "diaSemana",
+            "columnName": "diaSemana",
             "affinity": "TEXT",
             "notNull": true
           },
           {
-            "fieldPath": "cantidadPruebas",
-            "columnName": "cantidad_pruebas",
-            "affinity": "INTEGER",
+            "fieldPath": "horaInicio",
+            "columnName": "horaInicio",
+            "affinity": "TEXT",
             "notNull": true
           },
           {
-            "fieldPath": "pesoTotal",
-            "columnName": "peso_total",
-            "affinity": "REAL",
+            "fieldPath": "horaFin",
+            "columnName": "horaFin",
+            "affinity": "TEXT",
             "notNull": true
           }
         ],
         "primaryKey": {
           "autoGenerate": true,
           "columnNames": [
-            "id_tipo_prueba"
+            "idHorario"
           ]
         },
         "foreignKeys": [
           {
-            "table": "cursos",
+            "table": "Curso",
             "onDelete": "CASCADE",
             "onUpdate": "NO ACTION",
             "columns": [
-              "id_curso"
+              "idCurso"
             ],
             "referencedColumns": [
-              "id_curso"
+              "idCurso"
             ]
           }
         ]
       },
       {
-        "tableName": "calificaciones",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id_calificacion` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `id_curso` INTEGER NOT NULL, `id_tipo_prueba` INTEGER NOT NULL, `numero_prueba` INTEGER NOT NULL, `calificacion_obtenida` REAL, FOREIGN KEY(`id_curso`) REFERENCES `cursos`(`id_curso`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`id_tipo_prueba`) REFERENCES `tipos_prueba`(`id_tipo_prueba`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "tableName": "Calificacion",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`idCalificacion` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `idCurso` INTEGER NOT NULL, `idTipoPrueba` INTEGER NOT NULL, `numeroPrueba` INTEGER NOT NULL, `calificacionObtenida` REAL, FOREIGN KEY(`idCurso`) REFERENCES `Curso`(`idCurso`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`idTipoPrueba`) REFERENCES `TipoPrueba`(`idTipoPrueba`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "idCalificacion",
-            "columnName": "id_calificacion",
+            "columnName": "idCalificacion",
             "affinity": "INTEGER",
             "notNull": true
           },
           {
             "fieldPath": "idCurso",
-            "columnName": "id_curso",
+            "columnName": "idCurso",
             "affinity": "INTEGER",
             "notNull": true
           },
           {
             "fieldPath": "idTipoPrueba",
-            "columnName": "id_tipo_prueba",
+            "columnName": "idTipoPrueba",
             "affinity": "INTEGER",
             "notNull": true
           },
           {
             "fieldPath": "numeroPrueba",
-            "columnName": "numero_prueba",
+            "columnName": "numeroPrueba",
             "affinity": "INTEGER",
             "notNull": true
           },
           {
             "fieldPath": "calificacionObtenida",
-            "columnName": "calificacion_obtenida",
+            "columnName": "calificacionObtenida",
             "affinity": "REAL"
           }
         ],
         "primaryKey": {
           "autoGenerate": true,
           "columnNames": [
-            "id_calificacion"
+            "idCalificacion"
           ]
         },
         "foreignKeys": [
           {
-            "table": "cursos",
+            "table": "Curso",
             "onDelete": "CASCADE",
             "onUpdate": "NO ACTION",
             "columns": [
-              "id_curso"
+              "idCurso"
             ],
             "referencedColumns": [
-              "id_curso"
+              "idCurso"
             ]
           },
           {
-            "table": "tipos_prueba",
+            "table": "TipoPrueba",
             "onDelete": "CASCADE",
             "onUpdate": "NO ACTION",
             "columns": [
-              "id_tipo_prueba"
+              "idTipoPrueba"
             ],
             "referencedColumns": [
-              "id_tipo_prueba"
+              "idTipoPrueba"
             ]
           }
         ]
@@ -389,7 +389,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '683a481d13ede5fb17b2e45d7e787ba1')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '85177f7f689f2ff49ff8cfa62d44818a')"
     ]
   }
 }

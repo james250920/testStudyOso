@@ -1,4 +1,4 @@
-package esan.mendoza.teststudyoso.navigation
+package com.menfroyt.studyoso.navigation
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -6,28 +6,22 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Analytics
-import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Output
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavHostController
-import kotlinx.coroutines.launch
 
 @Composable
 fun DrawerContent(selectedScreen: String,onOptionSelected: (String) -> Unit) {
     Column(
         modifier = Modifier
-            .fillMaxWidth()
+            .width(280.dp)
             .fillMaxHeight()
             .padding(16.dp)
             .verticalScroll(rememberScrollState()),
@@ -100,12 +94,12 @@ fun DrawerOption(
             imageVector = icon,
             contentDescription = "Ir a $text",
             tint = when (text) {
-                "Home" -> if (selectedScreen == "Principal") Color(0xFFFFA500) else MaterialTheme.colorScheme.primary
-                "Dashboard" -> if (selectedScreen == "Dashboard") Color(0xFFFFA500) else MaterialTheme.colorScheme.primary
-                "Perfil" -> if (selectedScreen == "Perfil") Color(0xFFFFA500) else MaterialTheme.colorScheme.primary
-                "Configuración" -> if (selectedScreen == "Configuración") Color(0xFFFFA500) else MaterialTheme.colorScheme.primary
-                "Pomodoro" -> if (selectedScreen == "Pomodoro") Color(0xFFFFA500) else MaterialTheme.colorScheme.primary
-                "Cerrar Sesión" -> MaterialTheme.colorScheme.primary // No resaltamos "Cerrar Sesión"
+                "Home" -> if (selectedScreen == "Principal") Color(0xFF33c1ff) else Color(0xFF3355ff)
+                "Dashboard" -> if (selectedScreen == "Dashboard") Color(0xFF33c1ff) else Color(0xFF3355ff)
+                "Perfil" -> if (selectedScreen == "Perfil") Color(0xFF33c1ff) else Color(0xFF3355ff)
+                "Configuración" -> if (selectedScreen == "Configuración") Color(0xFF33c1ff) else Color(0xFF3355ff)
+                "Pomodoro" -> if (selectedScreen == "Pomodoro") Color(0xFF33c1ff) else Color(0xFF3355ff)
+                "Cerrar Sesión" -> Color(0xFF3355ff) // No resaltamos "Cerrar Sesión"
                 else -> MaterialTheme.colorScheme.primary
             },
             modifier = Modifier.size(24.dp)
@@ -115,11 +109,11 @@ fun DrawerOption(
             text = text,
             style = MaterialTheme.typography.bodyLarge,
             color = when (text) {
-                "Home" -> if (selectedScreen == "Principal") Color(0xFFFFA500) else MaterialTheme.colorScheme.onSurface
-                "Dashboard" -> if (selectedScreen == "Dashboard") Color(0xFFFFA500) else MaterialTheme.colorScheme.onSurface
-                "Perfil" -> if (selectedScreen == "Perfil") Color(0xFFFFA500) else MaterialTheme.colorScheme.onSurface
-                "Configuración" -> if (selectedScreen == "Configuración") Color(0xFFFFA500) else MaterialTheme.colorScheme.onSurface
-                "Pomodoro" -> if (selectedScreen == "Pomodoro") Color(0xFFFFA500) else MaterialTheme.colorScheme.onSurface
+                "Home" -> if (selectedScreen == "Principal") Color(0xFF33c1ff) else MaterialTheme.colorScheme.onSurface
+                "Dashboard" -> if (selectedScreen == "Dashboard") Color(0xFF33c1ff) else MaterialTheme.colorScheme.onSurface
+                "Perfil" -> if (selectedScreen == "Perfil") Color(0xFF33c1ff) else MaterialTheme.colorScheme.onSurface
+                "Configuración" -> if (selectedScreen == "Configuración") Color(0xFF33c1ff) else MaterialTheme.colorScheme.onSurface
+                "Pomodoro" -> if (selectedScreen == "Pomodoro") Color(0xFF33c1ff) else MaterialTheme.colorScheme.onSurface
                 "Cerrar Sesión" -> MaterialTheme.colorScheme.onSurface // No resaltamos "Cerrar Sesión"
                 else -> MaterialTheme.colorScheme.onSurface
             }

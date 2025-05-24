@@ -5,22 +5,22 @@ import kotlinx.coroutines.flow.Flow
 import java.util.Date
 
 @Entity(
-    tableName = "cursos",
+    tableName = "Curso",
     foreignKeys = [
         ForeignKey(
             entity = Usuario::class,
-            parentColumns = ["id_usuario"],
-            childColumns = ["id_usuario"],
+            parentColumns = ["idUsuario"],
+            childColumns = ["idUsuario"],
             onDelete = ForeignKey.CASCADE
         )
     ]
 )
 data class Curso(
-    @PrimaryKey(autoGenerate = true) @ColumnInfo(name = "id_curso") val idCurso: Int = 0,
-    @ColumnInfo(name = "nombre_curso") val nombreCurso: String,
-    @ColumnInfo(name = "color") val color: String?,
-    @ColumnInfo(name = "profesor") val profesor: String?,
-    @ColumnInfo(name = "aula") val aula: String?,
-    @ColumnInfo(name = "creditos") val creditos: Int?,
-    @ColumnInfo(name = "id_usuario") val idUsuario: Int
+    @PrimaryKey(autoGenerate = true) val idCurso: Int = 0,
+    val nombreCurso: String,
+    val color: String?,
+    val profesor: String?,
+    val aula: String?,
+    val creditos: Int?,
+    val idUsuario: Int
 )

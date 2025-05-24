@@ -1,17 +1,16 @@
-package esan.mendoza.teststudyoso.presentation.ui
+package esan.mendoza.teststudyoso.presentation.ui.home
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddToPhotos
 import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Dataset
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.FormatListNumbered
 import androidx.compose.material.icons.filled.Timer
-import androidx.compose.material.icons.filled.ViewModule
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -24,11 +23,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import esan.mendoza.teststudyoso.R
-import androidx.compose.ui.text.TextStyle
-import androidx.navigation.NavController
-import androidx.navigation.NavHostController
 
 @Composable
 fun PrincipalScreen(
@@ -38,36 +33,33 @@ fun PrincipalScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFF1A1A1A))
-            .padding(16.dp),
-        verticalArrangement = Arrangement.Top,
+            .background(MaterialTheme.colorScheme.background),
+        verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 8.dp).padding(top = 16.dp),
+                .padding(vertical = 8.dp),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
             MenuItem(
                 icon = Icons.Filled.AddToPhotos,
-                text = "Agregar cursos",
-                onClick = { onScreenSelected("AgregarCursos") }
+                text = "Cursos",
+                onClick = { onScreenSelected("lisCurso") }
             )
             MenuItem(
                 icon = Icons.Filled.EmojiEvents,
                 text = "Calificaciones",
-                onClick = { onScreenSelected("Calificaciones") }
+                onClick = { onScreenSelected("ListCalificaciones") }
             )
             MenuItem(
                 icon = Icons.Filled.FormatListNumbered,
-                text = "Lista de tareas",
+                text = "Tareas",
                 onClick = { onScreenSelected("ListaTareas") }
             )
         }
-
-        Spacer(modifier = Modifier.weight(1f))
-
+        Spacer(modifier = Modifier.height(32.dp))
         Image(
             painter = painterResource(id = R.drawable.study),
             contentDescription = "Logo Study Oso",
@@ -75,13 +67,11 @@ fun PrincipalScreen(
                 .size(260.dp)
                 .align(Alignment.CenterHorizontally)
         )
-
-        Spacer(modifier = Modifier.weight(1f))
-
+        Spacer(modifier = Modifier.height(32.dp))
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 16.dp ).padding(bottom = 16.dp),
+                .padding(vertical = 16.dp),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
             MenuItem(
@@ -112,7 +102,6 @@ fun MenuItem(
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
-        modifier = Modifier.padding(16.dp)
     ) {
         IconButton(
             onClick = onClick,
@@ -121,16 +110,15 @@ fun MenuItem(
             Icon(
                 imageVector = icon,
                 contentDescription = text,
-                tint = Color(0xFF83B5FF),
-                modifier = Modifier.size(64.dp)
+                tint = Color(0xFF3355ff),
+                modifier = Modifier.size(50.dp)
             )
         }
         Text(
             text = text,
-            color = Color.White,
+            color = MaterialTheme.colorScheme.onBackground,
             style = MaterialTheme.typography.bodyMedium,
             textAlign = TextAlign.Center,
-            modifier = Modifier.padding(top = 8.dp)
         )
     }
 }

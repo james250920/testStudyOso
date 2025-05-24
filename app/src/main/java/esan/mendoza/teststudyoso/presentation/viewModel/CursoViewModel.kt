@@ -12,40 +12,24 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
-class CursoViewModel(
-    private val repository: CursoRepository
-) : ViewModel() {
+class CursoViewModel(private val repository: CursoRepository) : ViewModel() {
 
-    fun insert(curso: Curso) = viewModelScope.launch(Dispatchers.IO) {
-        repository.insert(
-            curso
-        )
+    private val _cursos = MutableStateFlow<List<Curso>>(emptyList())
+    val cursos: StateFlow<List<Curso>> = _cursos.asStateFlow()
+
+    fun cargarCursos(idUsuario: Int) = viewModelScope.launch {
+        val lista = repository.obtenerCursosPorUsuario(idUsuario)
+        _cursos.value = lista
     }
 
-    fun update(curso: Curso) = viewModelScope.launch(Dispatchers.IO) {
-        repository.update(curso)
+    fun insertarCurso(curso: Curso) = viewModelScope.launch {
+        repository.insertarCurso(curso)
+        // Opcional: refrescar lista después de insertar
+        cargarCursos(curso.idUsuario)
     }
 
-    fun delete(curso: Curso) = viewModelScope.launch(Dispatchers.IO) {
-        repository.delete(curso)
-    }
-
-    fun getCursosByUsuario(idUsuario: Int): LiveData<List<Curso>> {
-        return repository.getCursosByUsuario(idUsuario)
-    }
-
-    suspend fun getCursoById(id: Int): Curso? {
-        return repository.getCursoById(id)
-    }
-}
-
-class CursoViewModelFactory(private val context: Context) : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(CursoViewModel::class.java)) {
-            val db = AppDatabase.getDatabase(context)
-            @Suppress("UNCHECKED_CAST")
-            return CursoViewModel(CursoRepository(context, db.cursoDao())) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
+    fun eliminarCurso(curso: Curso) = viewModelScope.launch {
+        repository.eliminarCurso(curso)
+        cargarCursos(curso.idUsuario)
     }
 }

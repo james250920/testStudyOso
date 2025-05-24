@@ -11,37 +11,23 @@ import esan.mendoza.teststudyoso.data.entity.Calificacion
 import esan.mendoza.teststudyoso.data.repository.CalificacionRepository
 import kotlinx.coroutines.Dispatchers
 
-class CalificacionViewModel(
-    private val repository: CalificacionRepository
-) : ViewModel() {
-    fun insert(calificacion: Calificacion) = viewModelScope.launch(Dispatchers.IO) {
-        repository.insert(calificacion)
+class CalificacionViewModel(private val repository: CalificacionRepository) : ViewModel() {
+
+    private val _calificaciones = MutableStateFlow<List<Calificacion>>(emptyList())
+    val calificaciones: StateFlow<List<Calificacion>> = _calificaciones.asStateFlow()
+
+    fun cargarCalificaciones(idCurso: Int, idTipoPrueba: Int) = viewModelScope.launch {
+        val lista = repository.obtenerPorCursoYTipo(idCurso, idTipoPrueba)
+        _calificaciones.value = lista
     }
 
-    fun update(calificacion: Calificacion) = viewModelScope.launch(Dispatchers.IO) {
-        repository.update(calificacion)
+    fun insertarCalificacion(calificacion: Calificacion) = viewModelScope.launch {
+        repository.insertar(calificacion)
+        cargarCalificaciones(calificacion.idCurso, calificacion.idTipoPrueba)
     }
 
-    fun delete(calificacion: Calificacion) = viewModelScope.launch(Dispatchers.IO) {
-        repository.delete(calificacion)
-    }
-
-    fun getCalificacionesByCurso(idCurso: Int): LiveData<List<Calificacion>> {
-        return repository.getCalificacionesByCurso(idCurso)
-    }
-
-    fun getCalificacionesByTipoPrueba(idTipoPrueba: Int): LiveData<List<Calificacion>> {
-        return repository.getCalificacionesByTipoPrueba(idTipoPrueba)
-    }
-}
-
-class CalificacionViewModelFactory(private val context: Context) : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(CalificacionViewModel::class.java)) {
-            val db = AppDatabase.getDatabase(context)
-            @Suppress("UNCHECKED_CAST")
-            return CalificacionViewModel(CalificacionRepository(context, db.calificacionDao(), db.tipoPruebaDao())) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
+    fun eliminarCalificacion(calificacion: Calificacion) = viewModelScope.launch {
+        repository.eliminar(calificacion)
+        cargarCalificaciones(calificacion.idCurso, calificacion.idTipoPrueba)
     }
 }

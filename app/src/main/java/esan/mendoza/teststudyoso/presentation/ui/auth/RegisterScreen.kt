@@ -1,42 +1,62 @@
-package esan.mendoza.teststudyoso.presentation.ui
+package esan.mendoza.teststudyoso.presentation.ui.auth
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import esan.mendoza.teststudyoso.presentation.viewModel.UsuarioViewModel
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.NavHostController
-import esan.mendoza.teststudyoso.data.entity.Usuario
+import esan.mendoza.teststudyoso.di.AppViewModelProvider
+import kotlinx.coroutines.launch
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterScreen(
-    navController: NavController
+    navController: NavController,
+    usuarioViewModel: UsuarioViewModel = viewModel(factory = AppViewModelProvider.UsuarioViewModelFactory)
 ) {
     var nombre by remember { mutableStateOf(TextFieldValue("")) }
     var apellido by remember { mutableStateOf(TextFieldValue("")) }
     var correo by remember { mutableStateOf(TextFieldValue("")) }
     var contrasena by remember { mutableStateOf(TextFieldValue("")) }
     var fechaNacimiento by remember { mutableStateOf(TextFieldValue("")) }
+
     val snackbarHostState = remember { SnackbarHostState() }
-    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+
+    // Observamos el error para mostrar mensaje
+    val error by usuarioViewModel.error.collectAsState()
+    // Observamos usuario para saber si se registró
+    val usuarioRegistrado by usuarioViewModel.usuarioState.collectAsState()
+
+    // Mostrar Snackbar si hay error
+    LaunchedEffect(error) {
+        error?.let {
+            scope.launch {
+                snackbarHostState.showSnackbar(it)
+            }
+        }
+    }
+
+    // Navegar si el registro fue exitoso (usuarioRegistrado no es null)
+    LaunchedEffect(usuarioRegistrado) {
+        if (usuarioRegistrado != null) {
+            navController.navigate("login") {
+                popUpTo("register") { inclusive = true }
+            }
+        }
+    }
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Registro de Usuario") }
-            )
+            TopAppBar(title = { Text("Registro de Usuario") })
         },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { padding ->
@@ -61,6 +81,12 @@ fun RegisterScreen(
                 modifier = Modifier.fillMaxWidth()
             )
             OutlinedTextField(
+                value = fechaNacimiento,
+                onValueChange = { fechaNacimiento = it },
+                label = { Text("Fecha Nacimiento (yyyy-mm-dd)") },
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
                 value = correo,
                 onValueChange = { correo = it },
                 label = { Text("Correo Electrónico") },
@@ -75,30 +101,34 @@ fun RegisterScreen(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                 modifier = Modifier.fillMaxWidth()
             )
-            OutlinedTextField(
-                value = fechaNacimiento,
-                onValueChange = { fechaNacimiento = it },
-                label = { Text("fechaNacimiento(yyyy-mm-dd)") },
-                visualTransformation = PasswordVisualTransformation(),
-                modifier = Modifier.fillMaxWidth()
-            )
+
+
             Button(
                 onClick = {
-                    navController.navigate("login") {
-                        popUpTo("register") { inclusive = true }
-                    }
+                    navController.navigate("login")
+                    usuarioViewModel.registrar(
+                        nombre = nombre.text.trim(),
+                        apellido = apellido.text.trim(),
+                        fechaNacimiento = fechaNacimiento.text.trim(),
+                        correo = correo.text.trim(),
+                        contrasena = contrasena.text
+                    )
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp) // Agregar altura consistente
             ) {
                 Text("Registrarse")
             }
+        }
+
             TextButton(
                 onClick = { navController.navigate("login") }
             ) {
-                Text("¿tienes cuenta? Iniciar Sesión")
+                Text("¿Tienes cuenta? Iniciar Sesión")
             }
-
         }
     }
-}
+
+
 

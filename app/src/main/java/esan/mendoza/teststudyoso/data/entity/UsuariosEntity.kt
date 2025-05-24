@@ -7,14 +7,14 @@ import androidx.room.Index
 
 
 @Entity(
-    tableName = "usuarios",
+    tableName = "usuario",  // Mantener así ya que las queries usan este nombre
     indices = [Index(value = ["correo"], unique = true)]
 )
 data class Usuario(
-    @PrimaryKey(autoGenerate = true) @ColumnInfo(name = "id_usuario") val idUsuario: Int = 0,
-    @ColumnInfo(name = "nombre") val nombre: String,
-    @ColumnInfo(name = "apellido") val apellido: String,
-    @ColumnInfo(name = "fecha_nacimiento") val fechaNacimiento: String,
-    @ColumnInfo(name = "correo") val correo: String,
-    @ColumnInfo(name = "contrasena") val contrasena: String // Hash de la contraseña
+    @PrimaryKey(autoGenerate = true) val idUsuario: Int = 0,
+    val nombre: String,
+    val apellido: String,
+    val fechaNacimiento: String,
+    val correo: String,
+    val contrasena: String
 )

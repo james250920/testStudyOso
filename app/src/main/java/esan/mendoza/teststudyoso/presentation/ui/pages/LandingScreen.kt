@@ -1,4 +1,4 @@
-package esan.mendoza.teststudyoso.presentation.ui
+package esan.mendoza.teststudyoso.presentation.ui.pages
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -57,9 +56,9 @@ fun StudyOsoLandingScreen(
             )
 
             Text(
-                text = "StudyOso es una aplicación que revoluciona tu organización " +
+                text = "StudyOso aplicación que revolucionara tu organización " +
                         "planificando las horas, asegurando que no te pierdas ninguna tarea " +
-                        "y calculando el GPA en segundos, ayudando a gestionar tu vida académica " +
+                        "y ayudando a gestionar tu vida académica " +
                         "de forma eficiente.",
                 color = Color.Black,
                 textAlign = TextAlign.Center,
@@ -76,7 +75,7 @@ fun StudyOsoLandingScreen(
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF003366)),
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text("Registrarse", fontWeight = FontWeight.Bold)
+                    Text("Registrarse", fontWeight = FontWeight.Bold,color = Color.White)
                 }
 
                 Button(
@@ -84,7 +83,7 @@ fun StudyOsoLandingScreen(
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF003366)),
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text("Ingresar", fontWeight = FontWeight.Bold)
+                    Text("Ingresar", fontWeight = FontWeight.Bold,color = Color.White)
                 }
             }
         }

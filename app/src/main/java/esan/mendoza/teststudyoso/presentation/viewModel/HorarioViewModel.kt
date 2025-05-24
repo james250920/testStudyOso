@@ -8,40 +8,28 @@ import esan.mendoza.teststudyoso.data.db.AppDatabase
 import esan.mendoza.teststudyoso.data.entity.Horario
 import esan.mendoza.teststudyoso.data.repository.HorarioRepository
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class HorarioViewModel(
-    private val repository: HorarioRepository
-) : ViewModel() {
+class HorarioViewModel(private val repository: HorarioRepository) : ViewModel() {
 
-    fun insert(horario: Horario) = viewModelScope.launch(Dispatchers.IO) {
-        repository.insert(horario)
+    private val _horarios = MutableStateFlow<List<Horario>>(emptyList())
+    val horarios: StateFlow<List<Horario>> = _horarios.asStateFlow()
+
+    fun cargarHorarios(idCurso: Int) = viewModelScope.launch {
+        val lista = repository.obtenerPorCurso(idCurso)
+        _horarios.value = lista
     }
 
-    fun update(horario: Horario) = viewModelScope.launch(Dispatchers.IO) {
-        repository.update(horario)
+    fun insertarHorario(horario: Horario) = viewModelScope.launch {
+        repository.insertar(horario)
+        cargarHorarios(horario.idCurso)
     }
 
-    fun delete(horario: Horario) = viewModelScope.launch(Dispatchers.IO) {
-        repository.delete(horario)
-    }
-
-    fun getHorariosByCurso(idCurso: Int): LiveData<List<Horario>> {
-        return repository.getHorariosByCurso(idCurso)
-    }
-
-    fun getHorariosByDia(diaSemana: String): LiveData<List<Horario>> {
-        return repository.getHorariosByDia(diaSemana)
-    }
-}
-
-class HorarioViewModelFactory(private val context: Context) : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(HorarioViewModel::class.java)) {
-            val db = AppDatabase.getDatabase(context)
-            @Suppress("UNCHECKED_CAST")
-            return HorarioViewModel(HorarioRepository(context, db.horarioDao())) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
+    fun eliminarHorario(horario: Horario) = viewModelScope.launch {
+        repository.eliminar(horario)
+        cargarHorarios(horario.idCurso)
     }
 }

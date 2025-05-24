@@ -6,28 +6,26 @@ import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 
 @Entity(
-    tableName = "calificaciones",
+    tableName = "Calificacion",
     foreignKeys = [
         ForeignKey(
             entity = Curso::class,
-            parentColumns = ["id_curso"],
-            childColumns = ["id_curso"],
+            parentColumns = ["idCurso"],
+            childColumns = ["idCurso"],
             onDelete = ForeignKey.CASCADE
         ),
         ForeignKey(
             entity = TipoPrueba::class,
-            parentColumns = ["id_tipo_prueba"],
-            childColumns = ["id_tipo_prueba"],
+            parentColumns = ["idTipoPrueba"],
+            childColumns = ["idTipoPrueba"],
             onDelete = ForeignKey.CASCADE
         )
     ]
 )
 data class Calificacion(
-    @PrimaryKey(autoGenerate = true) @ColumnInfo(name = "id_calificacion") val idCalificacion: Int = 0,
-    @ColumnInfo(name = "id_curso") val idCurso: Int,
-    @ColumnInfo(name = "id_tipo_prueba") val idTipoPrueba: Int,
-    @ColumnInfo(name = "numero_prueba") val numeroPrueba: Int,
-    @ColumnInfo(name = "calificacion_obtenida") val calificacionObtenida: Double?
-) {
-    // Note: Validation for numeroPrueba requires database access, so it's handled in the DAO or ValidationUtils
-}
+    @PrimaryKey(autoGenerate = true) val idCalificacion: Int = 0,
+    val idCurso: Int,
+    val idTipoPrueba: Int,
+    val numeroPrueba: Int,
+    val calificacionObtenida: Double?
+)

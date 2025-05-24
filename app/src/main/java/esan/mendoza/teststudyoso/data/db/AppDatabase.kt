@@ -20,35 +20,30 @@ import esan.mendoza.teststudyoso.data.dao.TipoPruebaDao
 import esan.mendoza.teststudyoso.data.dao.UsuarioDao
 
 @Database(
-    entities = [Usuario::class, Curso::class, Horario::class, Tarea::class, TipoPrueba::class, Calificacion::class],
+    entities = [
+        Usuario::class,
+        Curso::class,
+        TipoPrueba::class,
+        Tarea::class,
+        Horario::class,
+        Calificacion::class
+    ],
     version = 1,
-    exportSchema = false
+    exportSchema = true
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
+    companion object {
+        const val DATABASE_NAME = "app_database"
+    }
     abstract fun usuarioDao(): UsuarioDao
     abstract fun cursoDao(): CursoDao
-    abstract fun horarioDao(): HorarioDao
-    abstract fun tareaDao(): TareaDao
     abstract fun tipoPruebaDao(): TipoPruebaDao
+    abstract fun tareaDao(): TareaDao
+    abstract fun horarioDao(): HorarioDao
     abstract fun calificacionDao(): CalificacionDao
-
-    companion object {
-        @Volatile
-        private var INSTANCE: AppDatabase? = null
-
-        fun getDatabase(context: Context): AppDatabase {
-            return INSTANCE ?: synchronized(this) {
-                val instance = Room.databaseBuilder(
-                    context.applicationContext,
-                    AppDatabase::class.java,
-                    "studyOso_db"
-                )
-                    .allowMainThreadQueries() // For simplicity; use coroutines in production
-                    .build()
-                INSTANCE = instance
-                instance
-            }
-        }
-    }
 }
+
+
+
+

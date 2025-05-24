@@ -1,58 +1,53 @@
 package esan.mendoza.teststudyoso.presentation.viewModel
 
-import android.content.Context
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.liveData
 import androidx.lifecycle.viewModelScope
-import esan.mendoza.teststudyoso.data.db.AppDatabase
 import esan.mendoza.teststudyoso.data.entity.Usuario
 import esan.mendoza.teststudyoso.data.repository.UsuarioRepository
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 
-class UsuarioViewModel(
-    private val repository: UsuarioRepository
-) : ViewModel() {
-    val allUsuarios: Flow<List<Usuario>> = repository.allUsuarios
+class UsuarioViewModel(private val repository: UsuarioRepository) : ViewModel() {
 
-    fun insert(usuario: Usuario) = viewModelScope.launch(Dispatchers.IO) {
-        repository.insert(usuario)
-    }
+    private val _usuarioState = MutableStateFlow<Usuario?>(null)
+    val usuarioState: StateFlow<Usuario?> = _usuarioState.asStateFlow()
 
-    fun update(usuario: Usuario) = viewModelScope.launch(Dispatchers.IO) {
-        repository.update(usuario)
-    }
+    private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error.asStateFlow()
 
-    fun delete(usuario: Usuario) = viewModelScope.launch(Dispatchers.IO) {
-        repository.delete(usuario)
-    }
-
-    suspend fun getUsuarioById(id: Int): Usuario? {
-        return repository.getUsuarioById(id)
-    }
-
-    suspend fun getUsuarioByCorreo(correo: String): Usuario? {
-        return repository.getUsuarioByCorreo(correo)
-    }
-
-    fun getAllUsuariosLiveData(): LiveData<List<Usuario>> {
-        return repository.getAllUsuariosLiveData()
-    }
-    suspend fun login(correo: String, contrasena: String): Usuario? {
-        return repository.login(correo, contrasena)
-    }
-}
-
-class UsuarioViewModelFactory(private val context: Context) : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(UsuarioViewModel::class.java)) {
-            val db = AppDatabase.getDatabase(context)
-            @Suppress("UNCHECKED_CAST")
-            return UsuarioViewModel(UsuarioRepository(context, db.usuarioDao())) as T
+    fun registrar(
+        nombre: String,
+        apellido: String,
+        fechaNacimiento: String,
+        correo: String,
+        contrasena: String
+    ) = viewModelScope.launch {
+        val nuevoUsuario = Usuario(
+            nombre = nombre,
+            apellido = apellido,
+            fechaNacimiento = fechaNacimiento,
+            correo = correo,
+            contrasena = contrasena
+        )
+        val result = repository.registrar(nuevoUsuario)
+        if (result.isFailure) {
+            _error.value = result.exceptionOrNull()?.message
         }
-        throw IllegalArgumentException("Unknown ViewModel class")
+    }
+
+    fun iniciarSesion(correo: String, contrasena: String) = viewModelScope.launch {
+        val result = repository.iniciarSesion(correo, contrasena)
+        if (result.isSuccess) {
+            _usuarioState.value = result.getOrNull()
+        } else {
+            _error.value = "Credenciales inválidas"
+        }
+    }
+
+    fun existeCorreo(correo: String) = liveData {
+        emit(repository.existeCorreo(correo))
     }
 }
+
