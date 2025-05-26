@@ -19,7 +19,7 @@ android {
 
     defaultConfig {
         applicationId = "esan.mendoza.teststudyoso"
-        minSdk = 33
+        minSdk = 31
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
@@ -143,6 +143,7 @@ dependencies {
     //
     implementation("com.godaddy.android.colorpicker:compose-color-picker:0.7.0")
 
+    implementation ("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.2")
     // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
