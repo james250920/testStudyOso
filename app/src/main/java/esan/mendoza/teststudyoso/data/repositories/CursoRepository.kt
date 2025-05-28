@@ -14,4 +14,8 @@ class CursoRepository(private val dao: CursoDao) {
     suspend fun update(curso: Curso) = dao.update(curso)
 
     suspend fun delete(curso: Curso) = dao.delete(curso)
+
+    fun getCursos(): Flow<List<Curso>> {
+        return dao.getCursos()
+    }
 }

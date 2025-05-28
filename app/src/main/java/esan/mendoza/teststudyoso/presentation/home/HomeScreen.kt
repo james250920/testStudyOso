@@ -248,7 +248,8 @@ fun Home(
                     }
                     selectedScreen == "AgregarCalificacion" -> AgregarCalificacionScreen(
                         modifier = Modifier.padding(innerPadding),
-                        onScreenSelected = { screen -> selectedScreen = screen }
+                        onScreenSelected = { screen -> selectedScreen = screen },
+                        usuarioId = usuarioId
                     )
                     selectedScreen == "AgregarCursos" -> AgregarCursosScreen(
                         modifier = Modifier.padding(innerPadding),

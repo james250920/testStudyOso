@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import esan.mendoza.teststudyoso.data.entities.TipoPrueba
 import esan.mendoza.teststudyoso.data.repositories.TipoPruebaRepository
+import esan.mendoza.teststudyoso.domain.CursoConTiposPrueba
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -39,6 +40,18 @@ class TipoPruebaViewModel(private val repository: TipoPruebaRepository) : ViewMo
     fun eliminarTipoPrueba(tipoPrueba: TipoPrueba) {
         viewModelScope.launch {
             repository.delete(tipoPrueba)
+        }
+    }
+
+    //calificaciones
+    private val _cursoConTiposPrueba = MutableStateFlow<List<CursoConTiposPrueba>>(emptyList())
+    val cursoConTiposPrueba: StateFlow<List<CursoConTiposPrueba>> = _cursoConTiposPrueba.asStateFlow()
+
+    fun cargarTiposPruebaPorCurso(cursoId: Int) {
+        viewModelScope.launch {
+            repository.getTiposPruebaByCurso(cursoId).collect { lista ->
+                _cursoConTiposPrueba.value = lista
+            }
         }
     }
 }

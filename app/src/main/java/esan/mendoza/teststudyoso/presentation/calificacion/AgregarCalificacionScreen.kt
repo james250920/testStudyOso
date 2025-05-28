@@ -3,77 +3,82 @@ package esan.mendoza.teststudyoso.presentation.calificacion
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.ExposedDropdownMenuDefaults
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import esan.mendoza.teststudyoso.domain.TipoPrueba
+import androidx.lifecycle.viewmodel.compose.viewModel
+import esan.mendoza.teststudyoso.ViewModel.calificacion.CalificacionViewModel
+import esan.mendoza.teststudyoso.ViewModel.calificacion.CalificacionViewModelFactory
+import esan.mendoza.teststudyoso.ViewModel.curso.CursoViewModel
+import esan.mendoza.teststudyoso.ViewModel.curso.CursoViewModelFactory
+import esan.mendoza.teststudyoso.ViewModel.tipoPrueba.TipoPruebaViewModel
+import esan.mendoza.teststudyoso.ViewModel.tipoPrueba.TipoPruebaViewModelFactory
+import esan.mendoza.teststudyoso.data.db.AppDatabase
+import esan.mendoza.teststudyoso.data.entities.Calificacion
+import esan.mendoza.teststudyoso.data.entities.Curso
+import esan.mendoza.teststudyoso.data.entities.TipoPrueba
+import esan.mendoza.teststudyoso.data.repositories.CalificacionRepository
+import esan.mendoza.teststudyoso.data.repositories.CursoRepository
+import esan.mendoza.teststudyoso.data.repositories.TipoPruebaRepository
 
-data class Curso(
-    val id: Int = 0,
-    val nombreCurso: String,
-    val profesor: String,
-    val aula: String,
-    val pruebas: List<TipoPrueba> = emptyList()
-)
-
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AgregarCalificacionScreen(
     modifier: Modifier = Modifier,
-    onScreenSelected: (String) -> Unit
+    onScreenSelected: (String) -> Unit,
+    usuarioId: Int
 ) {
-    val cursos = remember {
-        listOf(
-            Curso(
-                id = 1,
-                nombreCurso = "Matemática",
-                profesor = "Juan Pérez",
-                aula = "A-101",
-                pruebas = listOf(
-                    TipoPrueba(1, "PCs", 3.toString(), 1, 0.3),
-                    TipoPrueba(2, "CLs", 3.toString(), 1, 0.3),
-                    TipoPrueba(3, "Ex.P", 1.toString(), 1, 0.2),
-                    TipoPrueba(4, "Ex.F", 1.toString(), 1, 0.2)
-                )
-            ),
-            Curso(
-                id = 2,
-                nombreCurso = "Física",
-                profesor = "María García",
-                aula = "B-203",
-                pruebas = listOf(
-                    TipoPrueba(5, "PCs", 4.toString(), 2, 0.4),
-                    TipoPrueba(6, "CLs", 2.toString(), 2, 0.2),
-                    TipoPrueba(7, "Ex.P", 1.toString(), 2, 0.2),
-                    TipoPrueba(8, "Ex.F", 1.toString(), 2, 0.2)
-                )
-            ),
-            Curso(
-                id = 3,
-                nombreCurso = "Química",
-                profesor = "Carlos López",
-                aula = "C-305",
-                pruebas = listOf(
-                    TipoPrueba(9, "PCs", 2.toString(), 3, 0.2),
-                    TipoPrueba(10, "CLs", 2.toString(), 3, 0.2),
-                    TipoPrueba(11, "Ex.P", 1.toString(), 3, 0.3),
-                    TipoPrueba(12, "Ex.F", 1.toString(), 3, 0.3)
-                )
-            )
-        )
+    val context = LocalContext.current
+    val db = remember { AppDatabase.getInstance(context) }
+
+    // Instancias de repos y viewmodels
+    val cursoRepository = remember { CursoRepository(db.CursoDao()) }
+    val cursoViewModel: CursoViewModel = viewModel(factory = CursoViewModelFactory(cursoRepository))
+
+    val tipoPruebaRepository = remember { TipoPruebaRepository(db.TipoPruebaDao()) }
+    val tipoPruebaViewModel: TipoPruebaViewModel = viewModel(factory = TipoPruebaViewModelFactory(tipoPruebaRepository))
+
+    val calificacionRepository = remember { CalificacionRepository(db.CalificacionDao()) }
+    val calificacionViewModel: CalificacionViewModel = viewModel(factory = CalificacionViewModelFactory(calificacionRepository))
+
+    // Estados para manejo de UI
+    var cursos by remember { mutableStateOf(listOf<Curso>()) }
+    var cursoSeleccionado by remember { mutableStateOf<Curso?>(null) }
+
+    var tiposPrueba by remember { mutableStateOf(listOf<TipoPrueba>()) }
+    var tipoPruebaSeleccionada by remember { mutableStateOf<TipoPrueba?>(null) }
+
+    var numeroPruebaSeleccionado by remember { mutableStateOf<Int?>(null) }
+    var calificacionTexto by remember { mutableStateOf("") }
+
+    var expandidoCurso by remember { mutableStateOf(false) }
+    var expandidoTipoPrueba by remember { mutableStateOf(false) }
+    var expandidoNumeroPrueba by remember { mutableStateOf(false) }
+
+    // Cargar cursos del usuario al inicio
+    LaunchedEffect(usuarioId) {
+        cursoViewModel.cargarCursos(usuarioId)
+        cursoViewModel.cursos.collect { lista ->
+            cursos = lista
+        }
     }
 
-    var cursoSeleccionado by remember { mutableStateOf<Curso?>(null) }
-    var pruebaSeleccionada by remember { mutableStateOf<TipoPrueba?>(null) }
-    var numeroPruebaSeleccionado by remember { mutableStateOf<Int?>(null) }
-    var expandidoCurso by remember { mutableStateOf(false) }
-    var expandidoPrueba by remember { mutableStateOf(false) }
-    var expandidoNumero by remember { mutableStateOf(false) }
-    var calificacion by remember { mutableStateOf("") }
+    // Cuando cambia curso seleccionado, carga los tipos de prueba para ese curso
+    LaunchedEffect(cursoSeleccionado) {
+        cursoSeleccionado?.let {
+            tipoPruebaViewModel.cargarTiposPorCurso(it.idCurso)
+            tipoPruebaViewModel.tiposPrueba.collect { lista ->
+                tiposPrueba = lista
+            }
+        } ?: run {
+            tiposPrueba = emptyList()
+        }
+        tipoPruebaSeleccionada = null
+        numeroPruebaSeleccionado = null
+    }
 
     Column(
         modifier = modifier
@@ -88,6 +93,7 @@ fun AgregarCalificacionScreen(
             modifier = Modifier.padding(bottom = 16.dp)
         )
 
+        // Dropdown Cursos
         ExposedDropdownMenuBox(
             expanded = expandidoCurso,
             onExpandedChange = { expandidoCurso = it }
@@ -99,18 +105,9 @@ fun AgregarCalificacionScreen(
                 label = { Text("Seleccionar Curso") },
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandidoCurso) },
                 modifier = Modifier
-                    .menuAnchor()  // Agregado este modificador
-                    .fillMaxWidth(),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.onBackground,
-                    focusedTextColor = MaterialTheme.colorScheme.onBackground,
-                    unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
-                    focusedLabelColor = MaterialTheme.colorScheme.primary,
-                    unfocusedLabelColor = MaterialTheme.colorScheme.onBackground
-                )
+                    .fillMaxWidth()
+                    .menuAnchor()
             )
-
             ExposedDropdownMenu(
                 expanded = expandidoCurso,
                 onDismissRequest = { expandidoCurso = false }
@@ -120,8 +117,6 @@ fun AgregarCalificacionScreen(
                         text = { Text(curso.nombreCurso) },
                         onClick = {
                             cursoSeleccionado = curso
-                            pruebaSeleccionada = null
-                            numeroPruebaSeleccionado = null
                             expandidoCurso = false
                         }
                     )
@@ -131,41 +126,33 @@ fun AgregarCalificacionScreen(
 
         Spacer(modifier = Modifier.height(8.dp))
 
+        // Dropdown Tipo de Prueba
         ExposedDropdownMenuBox(
-            expanded = expandidoPrueba,
-            onExpandedChange = { expandidoPrueba = it }
+            expanded = expandidoTipoPrueba,
+            onExpandedChange = { expandidoTipoPrueba = it }
         ) {
             OutlinedTextField(
-                value = pruebaSeleccionada?.nombre ?: "",
+                value = tipoPruebaSeleccionada?.nombreTipo ?: "",
                 onValueChange = {},
                 readOnly = true,
                 enabled = cursoSeleccionado != null,
-                label = { Text("Seleccionar Prueba") },
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandidoPrueba) },
+                label = { Text("Seleccionar Tipo de Prueba") },
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandidoTipoPrueba) },
                 modifier = Modifier
+                    .fillMaxWidth()
                     .menuAnchor()
-                    .fillMaxWidth(),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.onBackground,
-                    focusedTextColor = MaterialTheme.colorScheme.onBackground,
-                    unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
-                    focusedLabelColor = MaterialTheme.colorScheme.primary,
-                    unfocusedLabelColor = MaterialTheme.colorScheme.onBackground
-                )
             )
-
             ExposedDropdownMenu(
-                expanded = expandidoPrueba,
-                onDismissRequest = { expandidoPrueba = false }
+                expanded = expandidoTipoPrueba,
+                onDismissRequest = { expandidoTipoPrueba = false }
             ) {
-                cursoSeleccionado?.pruebas?.forEach { prueba ->
+                tiposPrueba.forEach { tipoPrueba ->
                     DropdownMenuItem(
-                        text = { Text(prueba.nombre) },
+                        text = { Text(tipoPrueba.nombreTipo) },
                         onClick = {
-                            pruebaSeleccionada = prueba
+                            tipoPruebaSeleccionada = tipoPrueba
                             numeroPruebaSeleccionado = null
-                            expandidoPrueba = false
+                            expandidoTipoPrueba = false
                         }
                     )
                 }
@@ -174,80 +161,89 @@ fun AgregarCalificacionScreen(
 
         Spacer(modifier = Modifier.height(8.dp))
 
+        // Dropdown Número de Prueba
         ExposedDropdownMenuBox(
-            expanded = expandidoNumero,
-            onExpandedChange = { expandidoNumero = it }
+            expanded = expandidoNumeroPrueba,
+            onExpandedChange = { expandidoNumeroPrueba = it }
         ) {
             OutlinedTextField(
                 value = numeroPruebaSeleccionado?.toString() ?: "",
                 onValueChange = {},
                 readOnly = true,
-                enabled = pruebaSeleccionada != null,
+                enabled = tipoPruebaSeleccionada != null,
                 label = { Text("Número de Prueba") },
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandidoNumero) },
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandidoNumeroPrueba) },
                 modifier = Modifier
+                    .fillMaxWidth()
                     .menuAnchor()
-                    .fillMaxWidth(),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.onBackground,
-                    focusedTextColor = MaterialTheme.colorScheme.onBackground,
-                    unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
-                    focusedLabelColor = MaterialTheme.colorScheme.primary,
-                    unfocusedLabelColor = MaterialTheme.colorScheme.onBackground
-                )
             )
-
             ExposedDropdownMenu(
-                expanded = expandidoNumero,
-                onDismissRequest = { expandidoNumero = false }
+                expanded = expandidoNumeroPrueba,
+                onDismissRequest = { expandidoNumeroPrueba = false }
             ) {
-                List(pruebaSeleccionada?.numPruebas ?: 0) { index ->
-                    val numero = index + 1
+                val cantidad = tipoPruebaSeleccionada?.cantidadPruebas ?: 0
+                (1..cantidad).forEach { numero ->
                     DropdownMenuItem(
                         text = { Text(numero.toString()) },
                         onClick = {
                             numeroPruebaSeleccionado = numero
-                            expandidoNumero = false
+                            expandidoNumeroPrueba = false
                         }
                     )
                 }
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
         OutlinedTextField(
-            value = calificacion,
-            onValueChange = { calificacion = it },
+            value = calificacionTexto,
+            onValueChange = { calificacionTexto = it },
             label = { Text("Calificación") },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            modifier = Modifier.fillMaxWidth(),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                unfocusedBorderColor = MaterialTheme.colorScheme.onBackground,
-                focusedTextColor = MaterialTheme.colorScheme.onBackground,
-                unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
-                focusedLabelColor = MaterialTheme.colorScheme.primary,
-                unfocusedLabelColor = MaterialTheme.colorScheme.onBackground
-            )
+            modifier = Modifier.fillMaxWidth()
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(
-            onClick = { onScreenSelected("ListCalificaciones") },
+            onClick = {
+                // Validaciones básicas
+                if (cursoSeleccionado == null || tipoPruebaSeleccionada == null ||
+                    numeroPruebaSeleccionado == null || calificacionTexto.isBlank()
+                ) {
+                    // Aquí puedes mostrar un Snackbar o Toast con error
+                    return@Button
+                }
+
+                val calificacionValor = calificacionTexto.toDoubleOrNull()
+                if (calificacionValor == null) {
+                    // Mostrar error de número inválido
+                    return@Button
+                }
+
+                // Crear objeto Calificacion
+                val nuevaCalificacion = Calificacion(
+                    idCurso = cursoSeleccionado!!.idCurso,
+                    idTipoPrueba = tipoPruebaSeleccionada!!.idTipoPrueba,
+                    numeroPrueba = numeroPruebaSeleccionado!!,
+                    calificacionObtenida = calificacionValor
+                )
+
+                // Insertar calificación a través del ViewModel
+                calificacionViewModel.insertarCalificacion(nuevaCalificacion)
+
+                // Navegar a lista de calificaciones o pantalla deseada
+                onScreenSelected("ListCalificaciones")
+            },
             modifier = Modifier.fillMaxWidth(),
             enabled = cursoSeleccionado != null &&
-                    pruebaSeleccionada != null &&
+                    tipoPruebaSeleccionada != null &&
                     numeroPruebaSeleccionado != null &&
-                    calificacion.isNotEmpty(),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
-            )
+                    calificacionTexto.isNotBlank(),
         ) {
             Text("Guardar Calificación")
         }
     }
 }
+

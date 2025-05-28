@@ -22,4 +22,9 @@ interface CursoDao {
 
     @Query("SELECT * FROM Cursos WHERE id_curso = :id")
     suspend fun getById(id: Int): Curso?
+
+    //implemtar getCursos
+    @Query("SELECT * FROM Cursos")
+    fun getCursos(): Flow<List<Curso>>
+
 }
