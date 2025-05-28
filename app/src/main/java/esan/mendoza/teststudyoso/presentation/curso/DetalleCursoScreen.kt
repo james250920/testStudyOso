@@ -11,6 +11,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Book
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FormatListNumberedRtl
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.*
@@ -27,11 +29,15 @@ import esan.mendoza.teststudyoso.ViewModel.Horario.HorarioViewModel
 import esan.mendoza.teststudyoso.ViewModel.Horario.HorarioViewModelFactory
 import esan.mendoza.teststudyoso.ViewModel.curso.CursoViewModel
 import esan.mendoza.teststudyoso.ViewModel.curso.CursoViewModelFactory
+import esan.mendoza.teststudyoso.ViewModel.tipoPrueba.TipoPruebaViewModel
+import esan.mendoza.teststudyoso.ViewModel.tipoPrueba.TipoPruebaViewModelFactory
 import esan.mendoza.teststudyoso.data.db.AppDatabase
 import esan.mendoza.teststudyoso.data.entities.Curso
 import esan.mendoza.teststudyoso.data.entities.Horario
+import esan.mendoza.teststudyoso.data.entities.TipoPrueba
 import esan.mendoza.teststudyoso.data.repositories.CursoRepository
 import esan.mendoza.teststudyoso.data.repositories.HorarioRepository
+import esan.mendoza.teststudyoso.data.repositories.TipoPruebaRepository
 
 
 data class HorarioDialogState(
@@ -67,6 +73,11 @@ fun DetalleCursoScreen(
     val horarioRepository = remember { HorarioRepository(db.HorarioDao()) }
     val horarioViewModel: HorarioViewModel = viewModel(factory = HorarioViewModelFactory(horarioRepository))
     val horarios by horarioViewModel.horarios.collectAsState()
+
+    val tipoPruebaRepository = remember { TipoPruebaRepository(db.TipoPruebaDao()) }
+    val tipoPruebaViewModel: TipoPruebaViewModel = viewModel(factory = TipoPruebaViewModelFactory(tipoPruebaRepository))
+    val tiposPrueba by tipoPruebaViewModel.tiposPrueba.collectAsState()
+
     // Estado para el curso cargado
     var curso by remember { mutableStateOf<Curso?>(null) }
     val scrollState = rememberScrollState()
@@ -75,6 +86,7 @@ fun DetalleCursoScreen(
     LaunchedEffect(cursoId) {
         curso = cursoViewModel.getCursoById(cursoId)
         horarioViewModel.cargarHorarios(cursoId)
+        tipoPruebaViewModel.cargarTiposPorCurso(cursoId)
     }
 
     curso?.let { cursoActual ->
@@ -99,7 +111,6 @@ fun DetalleCursoScreen(
             HorarioSection(
                 horarios = horarios,
                 onAgregarHorario = { horarioState ->
-                    // Crear objeto Horario con cursoId
                     val nuevoHorario = Horario(
                         idCurso = cursoId,
                         diaSemana = horarioState.dia,
@@ -107,13 +118,35 @@ fun DetalleCursoScreen(
                         horaFin = horarioState.horaFin,
                         aula = horarioState.aula
                     )
-                    // Insertar nuevo horario vía ViewModel
                     horarioViewModel.agregarHorario(nuevoHorario)
-                }
+                },
+                onEditarHorario = { horario ->
+                    horarioViewModel.actualizarHorario(horario)
+                },
+                onEliminarHorario = { horario ->
+                    horarioViewModel.eliminarHorario(horario)
+                },
+                modifier = Modifier.fillMaxWidth()
             )
             PruebasSection(
-                modifier = Modifier.fillMaxWidth(),
-                onScreenSelected = onScreenSelected
+                tiposPrueba = tiposPrueba,
+                onAgregarTipoPrueba = { pruebaDialogState ->
+                    val nuevoTipoPrueba = TipoPrueba(
+                        idCurso = cursoId,
+                        nombreTipo = pruebaDialogState.tipo,
+                        cantidadPruebas = pruebaDialogState.numero.toIntOrNull() ?: 0,
+                        pesoTotal = pruebaDialogState.peso.toDoubleOrNull() ?: 0.0
+                    )
+                    tipoPruebaViewModel.agregarTipoPrueba(nuevoTipoPrueba)
+                },
+                onEditarTipoPrueba = { tipoPrueba ->
+                    tipoPruebaViewModel.actualizarTipoPrueba(tipoPrueba)
+                },
+                onEliminarTipoPrueba = { tipoPrueba ->
+                    tipoPruebaViewModel.eliminarTipoPrueba(tipoPrueba)
+                },
+                onScreenSelected = onScreenSelected,
+                modifier = Modifier.fillMaxWidth()
             )
             PromedioTotal()
             Spacer(modifier = Modifier.height(32.dp))
@@ -249,9 +282,17 @@ private fun PromedioTotal() {
 }
 ///section tipo de pruebas
 @Composable
-internal fun PruebasSection(modifier: Modifier = Modifier,
-                            onScreenSelected: (String) -> Unit,) {
+internal fun PruebasSection(
+    tiposPrueba: List<TipoPrueba>,
+    onAgregarTipoPrueba: (PruebaDialogState) -> Unit,
+    onEditarTipoPrueba: (TipoPrueba) -> Unit,
+    onEliminarTipoPrueba: (TipoPrueba) -> Unit,
+    modifier: Modifier = Modifier,
+    onScreenSelected: (String) -> Unit,
+) {
     var showDialog by remember { mutableStateOf(false) }
+    var tipoPruebaSeleccionado by remember { mutableStateOf<TipoPrueba?>(null) }
+    val scrollState = rememberScrollState()
 
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -277,112 +318,245 @@ internal fun PruebasSection(modifier: Modifier = Modifier,
             }
         }
 
-        PruebaCard(
+        Row(
+            modifier = Modifier
+                .horizontalScroll(scrollState)
+                .padding(horizontal = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            tiposPrueba.forEach { tipo ->
+                TipoPruebaCard(
+                    tipoPrueba = tipo,
+                    modifier = Modifier.width(200.dp),
+                    onEdit = { tipoPruebaSeleccionado = tipo },
+                    onDelete = { onEliminarTipoPrueba(tipo) }
+                )
+            }
+        }
+
+        Button(
+            onClick = { onScreenSelected("AgregarCalificacion") },
             modifier = Modifier.fillMaxWidth(),
-            onScreenSelected = onScreenSelected
-
-
-        )
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary
+            )
+        ) {
+            Text("Agregar calificación")
+        }
 
         DialogoAgregarPrueba(
             showDialog = showDialog,
             onDismiss = { showDialog = false },
             onConfirm = { prueba ->
+                onAgregarTipoPrueba(prueba)
                 showDialog = false
             }
         )
-    }
-}
 
-@Composable
-private fun PruebaCard(
-    modifier: Modifier = Modifier,
-    onScreenSelected: (String) -> Unit,
-) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.errorContainer
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            TipoPrueba(
-                titulo = "PCs",
-                numeros = listOf("1", "2", "3")
+        tipoPruebaSeleccionado?.let { tipo ->
+            DialogoEditarPrueba(
+                tipoPrueba = tipo,
+                onDismiss = { tipoPruebaSeleccionado = null },
+                onConfirm = {
+                    onEditarTipoPrueba(it)
+                    tipoPruebaSeleccionado = null
+                }
             )
-
-            TipoPrueba(
-                titulo = "CLs",
-                numeros = listOf("1", "2", "3")
-            )
-
-            Button(
-                onClick = { onScreenSelected("AgregarCalificacion") },
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary
-                )
-            ) {
-                Text("Agregar calificación")
-            }
         }
     }
 }
 
 @Composable
-private fun TipoPrueba(
-    titulo: String,
-    numeros: List<String>,
-    modifier: Modifier = Modifier
+fun TipoPruebaCard(
+    tipoPrueba: TipoPrueba,
+    modifier: Modifier = Modifier,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit
 ) {
     Card(
-        modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.secondaryContainer
-        )
+        modifier = modifier
+            .padding(vertical = 4.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
     ) {
         Column(
-            modifier = Modifier.padding(12.dp),
+            modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Text(
-                text = titulo,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSecondaryContainer
-            )
+            // Encabezado
             Row(
                 modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = tipoPrueba.nombreTipo,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+                Text(
+                    text = "Peso: ${tipoPrueba.pesoTotal}%",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+            }
+
+            // Cards de pruebas individuales
+            val scrollState = rememberScrollState()
+            Row(
+                modifier = Modifier
+                    .horizontalScroll(scrollState)
+                    .padding(vertical = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                numeros.forEach { numero ->
-                    Card(
-                        modifier = Modifier.weight(1f),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surface
-                        ),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(8.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = numero,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
-                    }
+                repeat(tipoPrueba.cantidadPruebas) { index ->
+                    PruebaIndividualCard(
+                        numeroPrueba = index + 1,
+                        nota = "-", // Aquí irá la nota cuando la implementemos
+                        pesoIndividual = tipoPrueba.pesoTotal / tipoPrueba.cantidadPruebas
+                    )
+                }
+            }
+
+            // Botones de acción
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onEdit) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "Editar",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+                IconButton(onClick = onDelete) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Eliminar",
+                        tint = MaterialTheme.colorScheme.error
+                    )
                 }
             }
         }
     }
+}
+
+@Composable
+private fun PruebaIndividualCard(
+    numeroPrueba: Int,
+    nota: String,
+    pesoIndividual: Double
+) {
+    Card(
+        modifier = Modifier
+            .width(80.dp)
+            .height(100.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(8.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = "#$numeroPrueba",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = nota,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = String.format("%.1f%%", pesoIndividual),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun DialogoEditarPrueba(
+    tipoPrueba: TipoPrueba,
+    onDismiss: () -> Unit,
+    onConfirm: (TipoPrueba) -> Unit
+) {
+    var state by remember { mutableStateOf(
+        PruebaDialogState(
+            tipo = tipoPrueba.nombreTipo,
+            numero = tipoPrueba.cantidadPruebas.toString(),
+            peso = tipoPrueba.pesoTotal.toString()
+        )
+    )}
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Editar Prueba") },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = state.tipo,
+                    onValueChange = { state = state.copy(tipo = it) },
+                    label = { Text("Tipo de prueba") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = state.numero,
+                    onValueChange = { state = state.copy(numero = it) },
+                    label = { Text("Número de pruebas") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = state.peso,
+                    onValueChange = { state = state.copy(peso = it) },
+                    label = { Text("Peso de la prueba") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    onConfirm(TipoPrueba(
+                        idCurso = tipoPrueba.idCurso,
+                        nombreTipo = state.tipo,
+                        cantidadPruebas = state.numero.toIntOrNull() ?: 0,
+                        pesoTotal = state.peso.toDoubleOrNull() ?: 0.0
+                    ))
+                },
+                enabled = state.isValid()
+            ) {
+                Text("Guardar")
+            }
+        },
+        dismissButton = {
+            Button(onClick = onDismiss) {
+                Text("Cancelar")
+            }
+        }
+    )
 }
 
 @Composable
@@ -441,9 +615,12 @@ private fun DialogoAgregarPrueba(
 internal fun HorarioSection(
     horarios: List<Horario>,
     onAgregarHorario: (HorarioDialogState) -> Unit,
+    onEditarHorario: (Horario) -> Unit,
+    onEliminarHorario: (Horario) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var showDialog by remember { mutableStateOf(false) }
+    var horarioSeleccionado by remember { mutableStateOf<Horario?>(null) }
     val scrollState = rememberScrollState()
 
     Column(
@@ -468,7 +645,9 @@ internal fun HorarioSection(
                     horaInicio = horario.horaInicio,
                     horaFin = horario.horaFin,
                     aula = horario.aula,
-                    modifier = Modifier.width(160.dp)
+                    modifier = Modifier.width(160.dp),
+                    onEdit = { horarioSeleccionado = horario },
+                    onDelete = { onEliminarHorario(horario) }
                 )
             }
         }
@@ -491,6 +670,14 @@ internal fun HorarioSection(
                 showDialog = false
             }
         )
+
+        horarioSeleccionado?.let { horario ->
+            DialogoEditarHorario(
+                horario = horario,
+                onDismiss = { horarioSeleccionado = null },
+                onConfirm = { onEditarHorario(it) }
+            )
+        }
     }
 }
 
@@ -500,11 +687,12 @@ private fun HorarioCard(
     horaInicio: String,
     horaFin: String,
     aula: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit
 ) {
     Card(
-        modifier = modifier
-            .height(100.dp),  // Altura fija para consistencia
+        modifier = modifier.height(100.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.secondaryContainer
         ),
@@ -552,9 +740,93 @@ private fun HorarioCard(
                     color = MaterialTheme.colorScheme.onSecondaryContainer,
                     textAlign = TextAlign.Center
                 )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.padding(top = 8.dp)
+                ) {
+                    IconButton(onClick = onEdit) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = "Editar",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    IconButton(onClick = onDelete) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Eliminar",
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
             }
         }
     }
+}
+
+@Composable
+private fun DialogoEditarHorario(
+    horario: Horario,
+    onDismiss: () -> Unit,
+    onConfirm: (Horario) -> Unit
+) {
+    var state by remember { mutableStateOf(HorarioDialogState(horario.diaSemana, horario.horaInicio, horario.horaFin, horario.aula)) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Editar Horario") },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = state.dia,
+                    onValueChange = { state = state.copy(dia = it) },
+                    label = { Text("Día") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = state.horaInicio,
+                    onValueChange = { state = state.copy(horaInicio = it) },
+                    label = { Text("Hora Inicio") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = state.horaFin,
+                    onValueChange = { state = state.copy(horaFin = it) },
+                    label = { Text("Hora Fin") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = state.aula,
+                    onValueChange = { state = state.copy(aula = it) },
+                    label = { Text("Aula") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            Button(onClick = {
+                onConfirm(
+                    Horario(
+                        idCurso = horario.idCurso,
+                        idHorario = horario.idHorario,
+                        diaSemana = state.dia,
+                        horaInicio = state.horaInicio,
+                        horaFin = state.horaFin,
+                        aula = state.aula
+                    )
+                )
+            }
+            )
+            {
+                Text("Guardar")
+            }
+        },
+        dismissButton = {
+            Button(onClick = onDismiss) {
+                Text("Cancelar")
+            }
+        }
+    )
 }
 
 
