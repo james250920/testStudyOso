@@ -36,7 +36,10 @@ import esan.mendoza.teststudyoso.presentation.curso.ListCursoScreen
 import esan.mendoza.teststudyoso.R
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Home(navController: NavController) {
+fun Home(
+    navController: NavController,
+    usuarioId: Int
+    ) {
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     var selectedScreen by remember { mutableStateOf("Principal") }
@@ -225,59 +228,75 @@ fun Home(navController: NavController) {
                 },
                 containerColor = MaterialTheme.colorScheme.background
             ) { innerPadding ->
-                when (selectedScreen) {
-                    "AgregarCalificacion" -> AgregarCalificacionScreen(
+                when {
+                    selectedScreen.startsWith("DetalleCurso") -> {
+                        val cursoId = selectedScreen.substringAfter("DetalleCurso/").toIntOrNull()
+                        if (cursoId != null) {
+                            DetalleCursoScreen(
+                                modifier = Modifier.padding(innerPadding),
+                                onScreenSelected = { screen -> selectedScreen = screen },
+                                cursoId = cursoId
+                            )
+                        } else {
+                            // ID inválido, muestra lista de cursos o pantalla por defecto
+                            ListCursoScreen(
+                                modifier = Modifier.padding(innerPadding),
+                                onScreenSelected = { screen -> selectedScreen = screen },
+                                usuarioId = usuarioId
+                            )
+                        }
+                    }
+                    selectedScreen == "AgregarCalificacion" -> AgregarCalificacionScreen(
                         modifier = Modifier.padding(innerPadding),
                         onScreenSelected = { screen -> selectedScreen = screen }
                     )
-                    "AgregarCursos" -> AgregarCursosScreen(
+                    selectedScreen == "AgregarCursos" -> AgregarCursosScreen(
+                        modifier = Modifier.padding(innerPadding),
+                        onScreenSelected = { screen -> selectedScreen = screen },
+                        usuarioId = usuarioId
+                    )
+                    selectedScreen == "Calificaciones" -> CalificacionesScreen(
                         modifier = Modifier.padding(innerPadding),
                         onScreenSelected = { screen -> selectedScreen = screen }
                     )
-                    "Calificaciones" -> CalificacionesScreen(
-                        modifier = Modifier.padding(innerPadding),
-                        onScreenSelected = { screen -> selectedScreen = screen }
-                    )
-                    "Calendario" -> CalendarioScreen(
+                    selectedScreen == "Calendario" -> CalendarioScreen(
                         modifier = Modifier.padding(innerPadding)
                     )
-                    "Configuración" -> ConfiguracionScreen(
+                    selectedScreen == "Configuración" -> ConfiguracionScreen(
                         modifier = Modifier.padding(innerPadding)
                     )
-                    "Dashboard" -> DashboardScreen(
+                    selectedScreen == "Dashboard" -> DashboardScreen(
                         modifier = Modifier.padding(innerPadding),
                         onScreenSelected = { screen -> selectedScreen = screen }
                     )
-                    "DetalleCurso" -> DetalleCursoScreen(
-                        modifier = Modifier.padding(innerPadding),
-                        onScreenSelected = { screen -> selectedScreen = screen }
-                    )
-                    "ListaTareas" -> ListaTareasScreen(
+                    selectedScreen == "ListaTareas" -> ListaTareasScreen(
                         modifier = Modifier.padding(innerPadding)
                     )
-                    "ListCalificaciones" -> ListCalificacionScreen(
+                    selectedScreen == "ListCalificaciones" -> ListCalificacionScreen(
                         modifier = Modifier.padding(innerPadding),
-                        onScreenSelected = { screen -> selectedScreen = screen }
+                        onScreenSelected = { screen -> selectedScreen = screen },
+                        usuarioId = usuarioId
                     )
-                    "lisCurso" -> ListCursoScreen(
+                    selectedScreen == "lisCurso" -> ListCursoScreen(
                         modifier = Modifier.padding(innerPadding),
-                        onScreenSelected = { screen -> selectedScreen = screen }
+                        onScreenSelected = { screen -> selectedScreen = screen },
+                        usuarioId = usuarioId
                     )
-                    "MatrizEisenhower" -> MatrizEisenhowerScreen(
+                    selectedScreen == "MatrizEisenhower" -> MatrizEisenhowerScreen(
                         modifier = Modifier.padding(innerPadding)
                     )
-                    "Perfil" -> PerfilScreen(
+                    selectedScreen == "Perfil" -> PerfilScreen(
                         modifier = Modifier.padding(innerPadding),
                         onScreenSelected = { screen -> selectedScreen = screen }
                     )
-                    "Pomodoro" -> PomodoroScreen(
+                    selectedScreen == "Pomodoro" -> PomodoroScreen(
                         modifier = Modifier.padding(innerPadding)
                     )
-                    "Principal" -> PrincipalScreen(
+                    selectedScreen == "Principal" -> PrincipalScreen(
                         modifier = Modifier.padding(innerPadding),
                         onScreenSelected = { screen -> selectedScreen = screen }
                     )
-                    "SimuladoCalificacion" -> SimuladorCalificacionesScreen(
+                    selectedScreen == "SimuladoCalificacion" -> SimuladorCalificacionesScreen(
                         modifier = Modifier.padding(innerPadding),
                         onScreenSelected = { screen -> selectedScreen = screen }
                     )

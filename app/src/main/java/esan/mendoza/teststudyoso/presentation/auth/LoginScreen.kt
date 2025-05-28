@@ -17,27 +17,50 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import esan.mendoza.teststudyoso.ViewModel.usuario.UsuarioViewModel
+import esan.mendoza.teststudyoso.ViewModel.usuario.UsuarioViewModelFactory
+import esan.mendoza.teststudyoso.data.db.AppDatabase
+import esan.mendoza.teststudyoso.data.repositories.UsuarioRepository
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LoginScreen(navController :NavController
-
+fun LoginScreen(
+    navController: NavController
 ) {
+    val context = LocalContext.current
+    val db = remember { AppDatabase.getInstance(context) }
+    val usuarioRepository = remember { UsuarioRepository(db.UsuarioDao()) }
+    val usuarioViewModel: UsuarioViewModel = viewModel(
+        factory = UsuarioViewModelFactory(usuarioRepository)
+    )
+
     var correo by remember { mutableStateOf(TextFieldValue("")) }
     var contrasena by remember { mutableStateOf(TextFieldValue("")) }
     val snackbarHostState = remember { SnackbarHostState() }
+    var showError by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
+
+    LaunchedEffect(showError) {
+        if (showError) {
+            snackbarHostState.showSnackbar(errorMessage)
+            showError = false
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -73,7 +96,27 @@ fun LoginScreen(navController :NavController
             )
 
             Button(
-                onClick = { navController.navigate("home") },
+                onClick = {
+                    if (correo.text.isBlank() || contrasena.text.isBlank()) {
+                        errorMessage = "Ingrese correo y contraseña"
+                        showError = true
+                        return@Button
+                    }
+
+                    usuarioViewModel.login(
+                        correo.text.trim(),
+                        contrasena.text.trim(),
+                        onSuccess = { usuario ->
+                            navController.navigate("home/${usuario.idUsuario}") {
+                                popUpTo("login") { inclusive = true }
+                            }
+                        },
+                        onError = { mensaje ->
+                            errorMessage = mensaje
+                            showError = true
+                        }
+                    )
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp)

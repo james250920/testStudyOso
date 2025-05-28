@@ -1,7 +1,9 @@
 package esan.mendoza.teststudyoso.presentation.curso
 
+import android.graphics.Color.parseColor
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -16,14 +18,27 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import esan.mendoza.teststudyoso.ViewModel.Horario.HorarioViewModel
+import esan.mendoza.teststudyoso.ViewModel.Horario.HorarioViewModelFactory
+import esan.mendoza.teststudyoso.ViewModel.curso.CursoViewModel
+import esan.mendoza.teststudyoso.ViewModel.curso.CursoViewModelFactory
+import esan.mendoza.teststudyoso.data.db.AppDatabase
+import esan.mendoza.teststudyoso.data.entities.Curso
+import esan.mendoza.teststudyoso.data.entities.Horario
+import esan.mendoza.teststudyoso.data.repositories.CursoRepository
+import esan.mendoza.teststudyoso.data.repositories.HorarioRepository
+
 
 data class HorarioDialogState(
     val dia: String = "",
     val horaInicio: String = "",
-    val horaFin: String = ""
+    val horaFin: String = "",
+    val aula: String = ""
 ) {
     fun isValid() = dia.isNotBlank() && horaInicio.isNotBlank() && horaFin.isNotBlank()
 }
@@ -37,39 +52,90 @@ data class PruebaDialogState(
 }
 
 @Composable
-fun DetalleCursoScreen(modifier: Modifier = Modifier,
+fun DetalleCursoScreen(
+    modifier: Modifier = Modifier,
     onScreenSelected: (String) -> Unit,
-                       ) {
+    cursoId: Int
+) {
+    val context = LocalContext.current
+    val db = remember { AppDatabase.getInstance(context) }
+    val cursoRepository = remember { CursoRepository(db.CursoDao()) }
+    val cursoViewModel: CursoViewModel = viewModel(
+        factory = CursoViewModelFactory(cursoRepository)
+    )
+
+    val horarioRepository = remember { HorarioRepository(db.HorarioDao()) }
+    val horarioViewModel: HorarioViewModel = viewModel(factory = HorarioViewModelFactory(horarioRepository))
+    val horarios by horarioViewModel.horarios.collectAsState()
+    // Estado para el curso cargado
+    var curso by remember { mutableStateOf<Curso?>(null) }
     val scrollState = rememberScrollState()
 
+    // Cargar curso cuando cambie cursoId
+    LaunchedEffect(cursoId) {
+        curso = cursoViewModel.getCursoById(cursoId)
+        horarioViewModel.cargarHorarios(cursoId)
+    }
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.surface)
-            .verticalScroll(scrollState)
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        CursoHeader(
-            modifier = Modifier.fillMaxWidth(),
-            onScreenSelected = onScreenSelected
-        )
-        CursoInfo()
-        HorarioSection()
-        PruebasSection(
-            modifier = Modifier.fillMaxWidth(),
-            onScreenSelected = onScreenSelected
-        )
-        PromedioTotal()
-        Spacer(modifier = Modifier.height(32.dp))
+    curso?.let { cursoActual ->
+        Column(
+            modifier = modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.surface)
+                .verticalScroll(scrollState)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            CursoHeader(
+                modifier = Modifier.fillMaxWidth(),
+                onScreenSelected = onScreenSelected,
+                cursoNombre = cursoActual.nombreCurso,
+                cursoColor = cursoActual.color ?: "#FFFFFF"
+            )
+            CursoInfo(
+                profesor = cursoActual.profesor ?: "N/A",
+                aula = cursoActual.aula ?: "N/A"
+            )
+            HorarioSection(
+                horarios = horarios,
+                onAgregarHorario = { horarioState ->
+                    // Crear objeto Horario con cursoId
+                    val nuevoHorario = Horario(
+                        idCurso = cursoId,
+                        diaSemana = horarioState.dia,
+                        horaInicio = horarioState.horaInicio,
+                        horaFin = horarioState.horaFin,
+                        aula = horarioState.aula
+                    )
+                    // Insertar nuevo horario vía ViewModel
+                    horarioViewModel.agregarHorario(nuevoHorario)
+                }
+            )
+            PruebasSection(
+                modifier = Modifier.fillMaxWidth(),
+                onScreenSelected = onScreenSelected
+            )
+            PromedioTotal()
+            Spacer(modifier = Modifier.height(32.dp))
+        }
+    } ?: run {
+        // Opcional: mientras carga o no existe curso, muestra algo
+        Box(
+            modifier = modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text("Cargando información del curso...")
+        }
     }
 }
 
 @Composable
 private fun CursoHeader(
     modifier: Modifier = Modifier,
-    onScreenSelected: (String) -> Unit
+    onScreenSelected: (String) -> Unit,
+    cursoNombre: String,
+    cursoColor: String = "#FFFFFF"
+
 ) {
     Row(
         modifier = modifier
@@ -81,12 +147,12 @@ private fun CursoHeader(
         Icon(
             imageVector = Icons.Filled.Book,
             contentDescription = "Icono del curso",
-            tint = MaterialTheme.colorScheme.onSurface,
+            tint = Color(parseColor(cursoColor)),
             modifier = Modifier.size(40.dp)
         )
         Spacer(modifier = Modifier.width(4.dp))
         Text(
-            text = "Programación",
+            text = cursoNombre,
             style = MaterialTheme.typography.headlineMedium,
             color = MaterialTheme.colorScheme.onSurface
         )
@@ -103,14 +169,17 @@ private fun CursoHeader(
                 tint = MaterialTheme.colorScheme.onPrimaryContainer
             )
         }
-
     }
 }
 
 @Composable
-private fun CursoInfo() {
+private fun CursoInfo(
+    profesor: String,
+    aula: String,
+    modifier: Modifier = Modifier
+) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer
         ),
@@ -123,12 +192,12 @@ private fun CursoInfo() {
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                text = "Profesor: Juan Pérez",
+                text = "Profesor: $profesor",
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onPrimaryContainer
             )
             Text(
-                text = "Aula: 205",
+                text = "Aula: $aula",
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onPrimaryContainer
             )
@@ -136,108 +205,52 @@ private fun CursoInfo() {
     }
 }
 
-@Composable
-private fun HorarioSection() {
-    var showDialog by remember { mutableStateOf(false) }
 
-    Column(
+
+@Composable
+private fun PromedioTotal() {
+    Box(
         modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-
+        contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = "Horario",
-            style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            HorarioCard("Lunes", "08:00", "10:00", Modifier.weight(1f))
-            HorarioCard("Martes", "08:00", "10:00", Modifier.weight(1f))
-        }
-
-        Button(
-            onClick = { showDialog = true },
-            modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary
+            Text(
+                text = "Promedio Total",
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.padding(bottom = 16.dp)
             )
-        ) {
-            Text("Agregar horario")
-        }
-
-        DialogoAgregarHorario(
-            showDialog = showDialog,
-            onDismiss = { showDialog = false },
-            onConfirm = { horario ->
-                showDialog = false
-            }
-        )
-    }
-}
-
-@Composable
-private fun HorarioCard(
-    dia: String,
-    horaInicio: String,
-    horaFin: String,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier
-            .height(100.dp),  // Altura fija para consistencia
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.secondaryContainer
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
-    ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+            Card(
+                modifier = Modifier
+                    .size(150.dp)
+                    .aspectRatio(1f),
+                shape = CircleShape,
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
             ) {
-                Text(
-                    text = dia,
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer,
-                    textAlign = TextAlign.Center
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Row(
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(horizontal = 8.dp)
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = horaInicio,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
-                    Text(
-                        text = " - ",
-                        color = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
-                    Text(
-                        text = horaFin,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                        text = "5.4/20",
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 }
             }
         }
     }
 }
-
+///section tipo de pruebas
 @Composable
-private fun PruebasSection(modifier: Modifier = Modifier,
-                           onScreenSelected: (String) -> Unit,) {
+internal fun PruebasSection(modifier: Modifier = Modifier,
+                            onScreenSelected: (String) -> Unit,) {
     var showDialog by remember { mutableStateOf(false) }
 
     Column(
@@ -373,45 +386,177 @@ private fun TipoPrueba(
 }
 
 @Composable
-private fun PromedioTotal() {
-    Box(
-        modifier = Modifier.fillMaxWidth(),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Text(
-                text = "Promedio Total",
-                style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-            Card(
-                modifier = Modifier
-                    .size(150.dp)
-                    .aspectRatio(1f),
-                shape = CircleShape,
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-            ) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "5.4/20",
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
+private fun DialogoAgregarPrueba(
+    showDialog: Boolean,
+    onDismiss: () -> Unit,
+    onConfirm: (PruebaDialogState) -> Unit
+) {
+    if (showDialog) {
+        var state by remember { mutableStateOf(PruebaDialogState()) }
+
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            title = { Text("Agregar Prueba") },
+            text = {
+                Column {
+                    OutlinedTextField(
+                        value = state.tipo,
+                        onValueChange = { state = state.copy(tipo = it) },
+                        label = { Text("Tipo de prueba") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = state.numero,
+                        onValueChange = { state = state.copy(numero = it) },
+                        label = { Text("Número de pruebas") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = state.peso,
+                        onValueChange = { state = state.copy(peso = it) },
+                        label = { Text("Peso de la prueba") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
+            },
+            confirmButton = {
+                Button(onClick = { onConfirm(state) }) {
+                    Text("Guardar")
+                }
+            },
+            dismissButton = {
+                Button(onClick = onDismiss) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
+}
+
+//section horario
+
+@Composable
+internal fun HorarioSection(
+    horarios: List<Horario>,
+    onAgregarHorario: (HorarioDialogState) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var showDialog by remember { mutableStateOf(false) }
+    val scrollState = rememberScrollState()
+
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            text = "Horario",
+            style = MaterialTheme.typography.headlineMedium,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+
+        Row(
+            modifier = Modifier
+                .horizontalScroll(scrollState)
+                .padding(horizontal = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            horarios.forEach { horario ->
+                HorarioCard(
+                    dia = horario.diaSemana,
+                    horaInicio = horario.horaInicio,
+                    horaFin = horario.horaFin,
+                    aula = horario.aula,
+                    modifier = Modifier.width(160.dp)
+                )
+            }
+        }
+
+        Button(
+            onClick = { showDialog = true },
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary
+            )
+        ) {
+            Text("Agregar horario")
+        }
+
+        DialogoAgregarHorario(
+            showDialog = showDialog,
+            onDismiss = { showDialog = false },
+            onConfirm = { horarioState ->
+                onAgregarHorario(horarioState)
+                showDialog = false
+            }
+        )
+    }
+}
+
+@Composable
+private fun HorarioCard(
+    dia: String,
+    horaInicio: String,
+    horaFin: String,
+    aula: String,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier
+            .height(100.dp),  // Altura fija para consistencia
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = dia,
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(horizontal = 8.dp)
+                ) {
+                    Text(
+                        text = horaInicio,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                    Text(
+                        text = " - ",
+                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                    Text(
+                        text = horaFin,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                }
+                Text(
+                    text = aula,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                    textAlign = TextAlign.Center
+                )
             }
         }
     }
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -420,22 +565,54 @@ private fun DialogoAgregarHorario(
     onDismiss: () -> Unit,
     onConfirm: (HorarioDialogState) -> Unit
 ) {
+    val dias = listOf(
+        "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"
+    )
+
     if (showDialog) {
         var state by remember { mutableStateOf(HorarioDialogState()) }
         var showTimePickerInicio by remember { mutableStateOf(false) }
         var showTimePickerFin by remember { mutableStateOf(false) }
+        var expandedDias by remember { mutableStateOf(false) }
 
         AlertDialog(
             onDismissRequest = onDismiss,
             title = { Text("Agregar Horario") },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(
-                        value = state.dia,
-                        onValueChange = { state = state.copy(dia = it) },
-                        label = { Text("Día") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
+
+                    ExposedDropdownMenuBox(
+                        expanded = expandedDias,
+                        onExpandedChange = { expandedDias = it }
+                    ) {
+                        OutlinedTextField(
+                            value = state.dia,
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("Día") },
+                            trailingIcon = {
+                                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedDias)
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .menuAnchor()
+                        )
+
+                        ExposedDropdownMenu(
+                            expanded = expandedDias,
+                            onDismissRequest = { expandedDias = false }
+                        ) {
+                            dias.forEach { dia ->
+                                DropdownMenuItem(
+                                    text = { Text(dia) },
+                                    onClick = {
+                                        state = state.copy(dia = dia)
+                                        expandedDias = false
+                                    }
+                                )
+                            }
+                        }
+                    }
 
                     OutlinedTextField(
                         value = state.horaInicio,
@@ -469,6 +646,12 @@ private fun DialogoAgregarHorario(
                                 )
                             }
                         }
+                    )
+                    OutlinedTextField(
+                        value = state.aula,
+                        onValueChange = { state = state.copy(aula = it) },
+                        label = { Text("Aula") },
+                        modifier = Modifier.fillMaxWidth()
                     )
 
                     if (showTimePickerInicio) {
@@ -552,52 +735,3 @@ private fun TimePickerDialog(
     )
 }
 
-@Composable
-private fun DialogoAgregarPrueba(
-    showDialog: Boolean,
-    onDismiss: () -> Unit,
-    onConfirm: (PruebaDialogState) -> Unit
-) {
-    if (showDialog) {
-        var state by remember { mutableStateOf(PruebaDialogState()) }
-
-        AlertDialog(
-            onDismissRequest = onDismiss,
-            title = { Text("Agregar Prueba") },
-            text = {
-                Column {
-                    OutlinedTextField(
-                        value = state.tipo,
-                        onValueChange = { state = state.copy(tipo = it) },
-                        label = { Text("Tipo de prueba") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    OutlinedTextField(
-                        value = state.numero,
-                        onValueChange = { state = state.copy(numero = it) },
-                        label = { Text("Número de pruebas") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    OutlinedTextField(
-                        value = state.peso,
-                        onValueChange = { state = state.copy(peso = it) },
-                        label = { Text("Peso de la prueba") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-            },
-            confirmButton = {
-                Button(onClick = { onConfirm(state) }) {
-                    Text("Guardar")
-                }
-            },
-            dismissButton = {
-                Button(onClick = onDismiss) {
-                    Text("Cancelar")
-                }
-            }
-        )
-    }
-}

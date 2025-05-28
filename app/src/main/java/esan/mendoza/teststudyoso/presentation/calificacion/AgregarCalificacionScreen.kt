@@ -34,10 +34,10 @@ fun AgregarCalificacionScreen(
                 profesor = "Juan Pérez",
                 aula = "A-101",
                 pruebas = listOf(
-                    TipoPrueba(1, "PCs", 3, 1, 0.3),
-                    TipoPrueba(2, "CLs", 3, 1, 0.3),
-                    TipoPrueba(3, "Ex.P", 1, 1, 0.2),
-                    TipoPrueba(4, "Ex.F", 1, 1, 0.2)
+                    TipoPrueba(1, "PCs", 3.toString(), 1, 0.3),
+                    TipoPrueba(2, "CLs", 3.toString(), 1, 0.3),
+                    TipoPrueba(3, "Ex.P", 1.toString(), 1, 0.2),
+                    TipoPrueba(4, "Ex.F", 1.toString(), 1, 0.2)
                 )
             ),
             Curso(
@@ -46,10 +46,10 @@ fun AgregarCalificacionScreen(
                 profesor = "María García",
                 aula = "B-203",
                 pruebas = listOf(
-                    TipoPrueba(5, "PCs", 4, 2, 0.4),
-                    TipoPrueba(6, "CLs", 2, 2, 0.2),
-                    TipoPrueba(7, "Ex.P", 1, 2, 0.2),
-                    TipoPrueba(8, "Ex.F", 1, 2, 0.2)
+                    TipoPrueba(5, "PCs", 4.toString(), 2, 0.4),
+                    TipoPrueba(6, "CLs", 2.toString(), 2, 0.2),
+                    TipoPrueba(7, "Ex.P", 1.toString(), 2, 0.2),
+                    TipoPrueba(8, "Ex.F", 1.toString(), 2, 0.2)
                 )
             ),
             Curso(
@@ -58,10 +58,10 @@ fun AgregarCalificacionScreen(
                 profesor = "Carlos López",
                 aula = "C-305",
                 pruebas = listOf(
-                    TipoPrueba(9, "PCs", 2, 3, 0.2),
-                    TipoPrueba(10, "CLs", 2, 3, 0.2),
-                    TipoPrueba(11, "Ex.P", 1, 3, 0.3),
-                    TipoPrueba(12, "Ex.F", 1, 3, 0.3)
+                    TipoPrueba(9, "PCs", 2.toString(), 3, 0.2),
+                    TipoPrueba(10, "CLs", 2.toString(), 3, 0.2),
+                    TipoPrueba(11, "Ex.P", 1.toString(), 3, 0.3),
+                    TipoPrueba(12, "Ex.F", 1.toString(), 3, 0.3)
                 )
             )
         )

@@ -26,28 +26,28 @@ fun SimuladorCalificacionesScreen(modifier: Modifier = Modifier, onScreenSelecte
                 id = 1,
                 nombre = "PCs",
                 numPruebas = 3,
-                cursoId = 1,
+                cursoId = 1.toString(),
                 peso = 0.20
             ),
             TipoPrueba(
                 id = 2,
                 nombre = "CLs",
                 numPruebas = 3,
-                cursoId = 1,
+                cursoId = 1.toString(),
                 peso = 0.20
             ),
             TipoPrueba(
                 id = 3,
                 nombre = "Ex. Parcial",
                 numPruebas = 1,
-                cursoId = 1,
+                cursoId = 1.toString(),
                 peso = 0.30
             ),
             TipoPrueba(
                 id = 4,
                 nombre = "Ex. Final",
                 numPruebas = 1,
-                cursoId = 1,
+                cursoId = 1.toString(),
                 peso = 0.30
             )
         )
