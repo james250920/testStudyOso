@@ -1,5 +1,6 @@
 package esan.mendoza.teststudyoso.presentation.curso
 
+import android.annotation.SuppressLint
 import android.graphics.Color.parseColor
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -10,10 +11,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.Book
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.FormatListNumberedRtl
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -23,6 +24,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import esan.mendoza.teststudyoso.ViewModel.Horario.HorarioViewModel
@@ -173,23 +175,10 @@ private fun CursoHeader(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .padding(4.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(3.dp)
     ) {
-        Icon(
-            imageVector = Icons.Filled.Book,
-            contentDescription = "Icono del curso",
-            tint = Color(parseColor(cursoColor)),
-            modifier = Modifier.size(40.dp)
-        )
-        Spacer(modifier = Modifier.width(4.dp))
-        Text(
-            text = cursoNombre,
-            style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-        Spacer(modifier = Modifier.weight(1f))
         IconButton(
             onClick = { onScreenSelected("lisCurso") },
             modifier = Modifier
@@ -197,11 +186,31 @@ private fun CursoHeader(
                 .background(MaterialTheme.colorScheme.primaryContainer, CircleShape)
         ) {
             Icon(
-                imageVector = Icons.Filled.FormatListNumberedRtl,
+                imageVector = Icons.Filled.ArrowBackIosNew,
                 contentDescription = "Regresar",
                 tint = MaterialTheme.colorScheme.onPrimaryContainer
             )
         }
+        Spacer(modifier = Modifier.padding(end = 10.dp))
+
+        Icon(
+            imageVector = Icons.Filled.Book,
+            contentDescription = "Icono del curso",
+            tint = Color(parseColor(cursoColor)),
+            modifier = Modifier.size(40.dp)
+        )
+
+        Text(
+            text = cursoNombre,
+            style = MaterialTheme.typography.headlineSmall,
+            modifier = Modifier
+                .padding(horizontal = 2.dp)
+                ,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+
+
     }
 }
 
@@ -230,7 +239,7 @@ private fun CursoInfo(
                 color = MaterialTheme.colorScheme.onPrimaryContainer
             )
             Text(
-                text = "Aula: $aula",
+                text = "Modalidad: $aula",
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onPrimaryContainer
             )
@@ -444,6 +453,7 @@ fun TipoPruebaCard(
     }
 }
 
+@SuppressLint("DefaultLocale")
 @Composable
 private fun PruebaIndividualCard(
     numeroPrueba: Int,
@@ -485,7 +495,7 @@ private fun PruebaIndividualCard(
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = String.format("%.1f%%", pesoIndividual),
+                    text = String.format("%.0f%%", pesoIndividual),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center

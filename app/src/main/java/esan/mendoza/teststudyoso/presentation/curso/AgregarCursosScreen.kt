@@ -29,6 +29,7 @@ import esan.mendoza.teststudyoso.data.db.AppDatabase
 import esan.mendoza.teststudyoso.data.repositories.CursoRepository
 import esan.mendoza.teststudyoso.data.entities.Curso
 
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AgregarCursosScreen(
@@ -36,6 +37,11 @@ fun AgregarCursosScreen(
     onScreenSelected: (String) -> Unit,
     usuarioId: Int
 ) {
+
+    val modalidades = listOf(
+        "Presencial", "Virtual", "Híbrido"
+    )
+    var expandedModalidad by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val db = remember { AppDatabase.getInstance(context) }
     val cursoRepository = remember { CursoRepository(db.CursoDao()) }
@@ -126,11 +132,38 @@ fun AgregarCursosScreen(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
             )
 
-            InputField(
-                label = "Aula",
-                value = aula,
-                onValueChange = { aula = it }
-            )
+            ExposedDropdownMenuBox(
+                expanded = expandedModalidad,
+                onExpandedChange = { expandedModalidad = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
+            ) {
+                OutlinedTextField(
+                    value = aula,
+                    onValueChange = {},
+                    readOnly = true,
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedModalidad) },
+                    modifier = Modifier
+                        .menuAnchor()
+                        .fillMaxWidth(),
+                    label = { Text("Modalidad") }
+                )
+                ExposedDropdownMenu(
+                    expanded = expandedModalidad,
+                    onDismissRequest = { expandedModalidad = false }
+                ) {
+                    modalidades.forEach { modalidad ->
+                        DropdownMenuItem(
+                            text = { Text(modalidad) },
+                            onClick = {
+                                aula = modalidad
+                                expandedModalidad = false
+                            }
+                        )
+                    }
+                }
+            }
 
             Button(
                 onClick = {

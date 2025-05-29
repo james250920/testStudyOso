@@ -1,6 +1,7 @@
 package esan.mendoza.teststudyoso.presentation.home
 
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
@@ -27,13 +28,15 @@ import esan.mendoza.teststudyoso.presentation.calificacion.ListCalificacionScree
 import esan.mendoza.teststudyoso.presentation.calificacion.SimuladorCalificacionesScreen
 import esan.mendoza.teststudyoso.presentation.config.ConfiguracionScreen
 import esan.mendoza.teststudyoso.presentation.components.DashboardScreen
-import esan.mendoza.teststudyoso.presentation.tarea.ListaTareasScreen
 import esan.mendoza.teststudyoso.presentation.components.MatrizEisenhowerScreen
 import esan.mendoza.teststudyoso.presentation.usuario.PerfilScreen
-import esan.mendoza.teststudyoso.presentation.components.PomodoroScreen
+import esan.mendoza.teststudyoso.presentation.components.pomodoro.PomodoroScreen
 import esan.mendoza.teststudyoso.presentation.curso.DetalleCursoScreen
 import esan.mendoza.teststudyoso.presentation.curso.ListCursoScreen
 import esan.mendoza.teststudyoso.R
+import esan.mendoza.teststudyoso.presentation.tarea.AddTaskScreen
+import esan.mendoza.teststudyoso.presentation.tarea.ListTaskScreen
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Home(
@@ -207,8 +210,8 @@ fun Home(
                         )
 
                         NavigationBarItem(
-                            selected = selectedScreen == "ListaTareas",
-                            onClick = { selectedScreen = "ListaTareas" },
+                            selected = selectedScreen == "AddTaskScreen",
+                            onClick = { selectedScreen = "AddTaskScreen" },
                             icon = {
                                 Icon(
                                     imageVector = Icons.Filled.AddCircleOutline,
@@ -284,8 +287,9 @@ fun Home(
                         onScreenSelected = { screen -> selectedScreen = screen },
                         usuarioId = usuarioId
                     )
-                    selectedScreen == "ListaTareas" -> ListaTareasScreen(
-                        modifier = Modifier.padding(innerPadding)
+                    selectedScreen == "ListTaskScreen" -> ListTaskScreen(
+                        modifier = Modifier.padding(innerPadding),
+                        onScreenSelected = { screen -> selectedScreen = screen }
                     )
                     selectedScreen == "ListCalificaciones" -> ListCalificacionScreen(
                         modifier = Modifier.padding(innerPadding),
@@ -299,15 +303,20 @@ fun Home(
                     )
                     selectedScreen == "MatrizEisenhower" -> MatrizEisenhowerScreen(
                         modifier = Modifier.padding(innerPadding)
+                        , onScreenSelected = { screen -> selectedScreen = screen }
                     )
                     selectedScreen == "Perfil" -> PerfilScreen(
                         modifier = Modifier.padding(innerPadding),
                         onScreenSelected = { screen -> selectedScreen = screen },
                         usuarioId = usuarioId
                     )
-                    selectedScreen == "Pomodoro" -> PomodoroScreen(
-                        modifier = Modifier.padding(innerPadding)
-                    )
+                    selectedScreen == "Pomodoro" -> {
+                        PomodoroScreen(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(innerPadding)
+                        )
+                    }
                     selectedScreen == "Principal" -> PrincipalScreen(
                         modifier = Modifier.padding(innerPadding),
                         onScreenSelected = { screen -> selectedScreen = screen }
@@ -322,6 +331,10 @@ fun Home(
                             )
                         }
                     }
+                    selectedScreen == "AddTaskScreen" -> AddTaskScreen(
+                        modifier = Modifier.padding(innerPadding),
+                        onScreenSelected = { screen -> selectedScreen = screen }
+                    )
                 }
             }
         }

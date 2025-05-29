@@ -7,6 +7,8 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.*
@@ -66,7 +68,7 @@ private fun CalendarHeader(
         verticalAlignment = Alignment.CenterVertically
     ) {
         IconButton(onClick = onPreviousMonth) {
-            Icon(Icons.Default.KeyboardArrowLeft, "Mes anterior")
+            Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, "Mes anterior")
         }
 
         Text(
@@ -75,7 +77,7 @@ private fun CalendarHeader(
         )
 
         IconButton(onClick = onNextMonth) {
-            Icon(Icons.Default.KeyboardArrowRight, "Mes siguiente")
+            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, "Mes siguiente")
         }
     }
 
