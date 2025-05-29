@@ -281,7 +281,8 @@ fun Home(
                     )
                     selectedScreen == "Dashboard" -> DashboardScreen(
                         modifier = Modifier.padding(innerPadding),
-                        onScreenSelected = { screen -> selectedScreen = screen }
+                        onScreenSelected = { screen -> selectedScreen = screen },
+                        usuarioId = usuarioId
                     )
                     selectedScreen == "ListaTareas" -> ListaTareasScreen(
                         modifier = Modifier.padding(innerPadding)

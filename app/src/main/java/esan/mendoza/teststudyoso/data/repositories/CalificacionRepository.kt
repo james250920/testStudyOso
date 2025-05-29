@@ -14,4 +14,7 @@ class CalificacionRepository(private val dao: CalificacionDao) {
     suspend fun update(calificacion: Calificacion) = dao.update(calificacion)
 
     suspend fun delete(calificacion: Calificacion) = dao.delete(calificacion)
+
+    fun getCalificacionesByUsuario(usuarioId: Int): Flow<List<Calificacion>> = dao.getCalificacionesByUsuario(usuarioId)
+
 }

@@ -46,4 +46,13 @@ class CalificacionViewModel(private val repository: CalificacionRepository) : Vi
             repository.delete(calificacion)
         }
     }
+
+
+    fun cargarCalificacionesPorUsuario(usuarioId: Int) {
+        viewModelScope.launch {
+            repository.getCalificacionesByUsuario(usuarioId).collect { lista ->
+                _calificaciones.value = lista
+            }
+        }
+    }
 }

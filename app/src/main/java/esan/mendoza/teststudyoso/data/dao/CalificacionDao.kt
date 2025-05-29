@@ -22,4 +22,12 @@ interface CalificacionDao {
 
     @Query("SELECT * FROM Calificaciones WHERE id_tipo_prueba = :tipoPruebaId")
     fun getCalificacionesByTipoPrueba(tipoPruebaId: Int): Flow<List<Calificacion>>
+
+    @Query("""
+    SELECT cal.*
+    FROM Calificaciones cal
+    INNER JOIN Cursos c ON cal.id_curso = c.id_curso
+    WHERE c.id_usuario = :usuarioId
+""")
+    fun getCalificacionesByUsuario(usuarioId: Int): Flow<List<Calificacion>>
 }
