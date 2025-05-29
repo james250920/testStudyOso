@@ -22,7 +22,7 @@ import esan.mendoza.teststudyoso.navigation.DrawerContent
 import esan.mendoza.teststudyoso.presentation.calificacion.AgregarCalificacionScreen
 import esan.mendoza.teststudyoso.presentation.curso.AgregarCursosScreen
 import esan.mendoza.teststudyoso.presentation.components.CalendarioScreen
-import esan.mendoza.teststudyoso.presentation.calificacion.CalificacionesScreen
+import esan.mendoza.teststudyoso.presentation.calificacion.DetalleCalificacionesScreen
 import esan.mendoza.teststudyoso.presentation.calificacion.ListCalificacionScreen
 import esan.mendoza.teststudyoso.presentation.calificacion.SimuladorCalificacionesScreen
 import esan.mendoza.teststudyoso.presentation.config.ConfiguracionScreen
@@ -229,6 +229,22 @@ fun Home(
                 containerColor = MaterialTheme.colorScheme.background
             ) { innerPadding ->
                 when {
+                    selectedScreen.startsWith("DetalleCalificaciones") -> {
+                        val cursoId = selectedScreen.substringAfter("DetalleCalificaciones/").toIntOrNull()
+                        if (cursoId != null) {
+                            DetalleCalificacionesScreen(
+                                modifier = Modifier.padding(innerPadding),
+                                cursoId = cursoId,
+                                onScreenSelected = { screen -> selectedScreen = screen }
+                            )
+                        } else {
+                            ListCalificacionScreen(
+                                modifier = Modifier.padding(innerPadding),
+                                onScreenSelected = { screen -> selectedScreen = screen },
+                                usuarioId = usuarioId
+                            )
+                        }
+                    }
                     selectedScreen.startsWith("DetalleCurso") -> {
                         val cursoId = selectedScreen.substringAfter("DetalleCurso/").toIntOrNull()
                         if (cursoId != null) {
@@ -256,10 +272,7 @@ fun Home(
                         onScreenSelected = { screen -> selectedScreen = screen },
                         usuarioId = usuarioId
                     )
-                    selectedScreen == "Calificaciones" -> CalificacionesScreen(
-                        modifier = Modifier.padding(innerPadding),
-                        onScreenSelected = { screen -> selectedScreen = screen }
-                    )
+
                     selectedScreen == "Calendario" -> CalendarioScreen(
                         modifier = Modifier.padding(innerPadding)
                     )
@@ -297,10 +310,16 @@ fun Home(
                         modifier = Modifier.padding(innerPadding),
                         onScreenSelected = { screen -> selectedScreen = screen }
                     )
-                    selectedScreen == "SimuladoCalificacion" -> SimuladorCalificacionesScreen(
-                        modifier = Modifier.padding(innerPadding),
-                        onScreenSelected = { screen -> selectedScreen = screen }
-                    )
+                    selectedScreen.startsWith("SimuladoCalificacion") -> {
+                        val cursoId = selectedScreen.substringAfter("SimuladoCalificacion/").toIntOrNull()
+                        if (cursoId != null) {
+                            SimuladorCalificacionesScreen(
+                                modifier = Modifier.padding(innerPadding),
+                                cursoId = cursoId,
+                                onScreenSelected = { screen -> selectedScreen = screen }
+                            )
+                        }
+                    }
                 }
             }
         }

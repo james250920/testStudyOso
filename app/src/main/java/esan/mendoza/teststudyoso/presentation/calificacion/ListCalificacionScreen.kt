@@ -111,9 +111,9 @@ fun ListCalificacionScreen(
 
 @Composable
 private fun CursoList(
-    cursos: List<esan.mendoza.teststudyoso.data.entities.Curso>,
+    cursos: List<Curso>,
     onScreenSelected: (String) -> Unit,
-    onDeleteCurso: (esan.mendoza.teststudyoso.data.entities.Curso) -> Unit,  // Nuevo parámetro
+    onDeleteCurso: (Curso) -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -130,8 +130,8 @@ private fun CursoList(
             val curso = cursos[index]
             CursoItem(
                 curso = curso,
-                onClick = { onScreenSelected("Calificaciones") },
-                onDelete = { onDeleteCurso(curso) },  // Nuevo parámetro
+                onClick = { onScreenSelected("DetalleCalificaciones/${curso.idCurso}") }, // <--- Aquí va el cambio
+                onDelete = { onDeleteCurso(curso) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(MaterialTheme.colorScheme.surface)
@@ -139,6 +139,7 @@ private fun CursoList(
         }
     }
 }
+
 
 @Composable
 private fun EmptyState() {
@@ -168,7 +169,7 @@ private fun EmptyState() {
 private fun CursoItem(
     curso: Curso,
     onClick: () -> Unit,
-    onDelete: () -> Unit,  // Nuevo parámetro
+    onDelete: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
