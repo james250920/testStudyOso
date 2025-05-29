@@ -302,7 +302,8 @@ fun Home(
                     )
                     selectedScreen == "Perfil" -> PerfilScreen(
                         modifier = Modifier.padding(innerPadding),
-                        onScreenSelected = { screen -> selectedScreen = screen }
+                        onScreenSelected = { screen -> selectedScreen = screen },
+                        usuarioId = usuarioId
                     )
                     selectedScreen == "Pomodoro" -> PomodoroScreen(
                         modifier = Modifier.padding(innerPadding)
