@@ -289,7 +289,8 @@ fun Home(
                     )
                     selectedScreen == "ListTaskScreen" -> ListTaskScreen(
                         modifier = Modifier.padding(innerPadding),
-                        onScreenSelected = { screen -> selectedScreen = screen }
+                        onScreenSelected = { screen -> selectedScreen = screen },
+                        usuarioId = usuarioId
                     )
                     selectedScreen == "ListCalificaciones" -> ListCalificacionScreen(
                         modifier = Modifier.padding(innerPadding),
@@ -333,7 +334,8 @@ fun Home(
                     }
                     selectedScreen == "AddTaskScreen" -> AddTaskScreen(
                         modifier = Modifier.padding(innerPadding),
-                        onScreenSelected = { screen -> selectedScreen = screen }
+                        onScreenSelected = { screen -> selectedScreen = screen },
+                        usuarioId = usuarioId
                     )
                 }
             }

@@ -64,7 +64,7 @@ fun DashboardScreen(
     // Cargar datos al iniciar
     LaunchedEffect(usuarioId) {
         cursoViewModel.cargarCursos(usuarioId)
-        tareaViewModel.cargarTareas(usuarioId)
+        tareaViewModel.cargarTareasPorUsuario(usuarioId)
         calificacionViewModel.cargarCalificacionesPorUsuario(usuarioId)
     }
 
@@ -92,7 +92,7 @@ fun DashboardScreen(
                     value = tareas.size.toString(),
                     icon = Icons.Filled.Assignment,
                     color = MaterialTheme.colorScheme.primary,
-                    onClick = { onScreenSelected("ListaTareas") }
+                    onClick = { onScreenSelected("ListTaskScreen") }
                 )
             }
 
@@ -135,7 +135,7 @@ fun DashboardScreen(
         ProximasTareasCard(
             modifier = Modifier.fillMaxWidth(),
             tareas = tareas,
-            onVerMasClick = { onScreenSelected("ListaTareas") }
+            onVerMasClick = { onScreenSelected("ListTaskScreen") }
         )
     }
 }

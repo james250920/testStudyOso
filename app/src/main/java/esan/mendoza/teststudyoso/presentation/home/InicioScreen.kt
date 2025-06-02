@@ -56,7 +56,7 @@ fun PrincipalScreen(
             MenuItem(
                 icon = Icons.Filled.FormatListNumbered,
                 text = "Tareas",
-                onClick = { onScreenSelected("ListaTareas") }
+                onClick = { onScreenSelected("ListTaskScreen") }
             )
         }
         Spacer(modifier = Modifier.height(32.dp))
