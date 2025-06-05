@@ -48,6 +48,16 @@ fun LoginScreen(
     val usuarioViewModel: UsuarioViewModel = viewModel(
         factory = UsuarioViewModelFactory(usuarioRepository)
     )
+    val sessionManager = remember { SessionManager(context) }
+
+    // Verificar si ya existe una sesión activa
+    LaunchedEffect(Unit) {
+        if (sessionManager.isLoggedIn()) {
+            navController.navigate("home/${sessionManager.getUserId()}") {
+                popUpTo("login") { inclusive = true }
+            }
+        }
+    }
 
     var correo by remember { mutableStateOf(TextFieldValue("")) }
     var contrasena by remember { mutableStateOf(TextFieldValue("")) }
@@ -107,6 +117,8 @@ fun LoginScreen(
                         correo.text.trim(),
                         contrasena.text.trim(),
                         onSuccess = { usuario ->
+                            // Guardar la sesión
+                            sessionManager.saveSession(usuario.idUsuario, correo.text.trim())
                             navController.navigate("home/${usuario.idUsuario}") {
                                 popUpTo("login") { inclusive = true }
                             }

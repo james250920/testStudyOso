@@ -40,4 +40,5 @@ class HorarioViewModel(private val repository: HorarioRepository) : ViewModel() 
             repository.delete(horario)
         }
     }
+
 }

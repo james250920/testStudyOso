@@ -3,14 +3,14 @@ package esan.mendoza.teststudyoso.presentation.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.items as gridItems
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,12 +22,22 @@ import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.time.temporal.WeekFields
-import java.util.*
+import java.util.Locale
+
+enum class CalendarMode {
+    MONTH, WEEK, DAY
+}
 
 @Composable
 fun CalendarioScreen(modifier: Modifier = Modifier) {
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
     var currentMonth by remember { mutableStateOf(YearMonth.now()) }
+    var calendarMode by remember { mutableStateOf(CalendarMode.MONTH) }
+
+    val eventosPorFecha = mapOf(
+        LocalDate.now() to listOf("Revisión de código", "Reunión de proyecto"),
+        LocalDate.now().plusDays(1) to emptyList()
+    )
 
     Column(
         modifier = modifier
@@ -38,21 +48,25 @@ fun CalendarioScreen(modifier: Modifier = Modifier) {
         CalendarHeader(
             currentMonth = currentMonth,
             onPreviousMonth = { currentMonth = currentMonth.minusMonths(1) },
-            onNextMonth = { currentMonth = currentMonth.plusMonths(1) }
+            onNextMonth = { currentMonth = currentMonth.plusMonths(1) },
+            onModeChanged = { calendarMode = it }
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        CalendarGrid(
-            currentMonth = currentMonth,
-            selectedDate = selectedDate,
-            onDateSelected = { selectedDate = it }
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Sección para eventos del día seleccionado
-        EventosDiarios(selectedDate)
+        when (calendarMode) {
+            CalendarMode.MONTH -> CalendarGrid(
+                currentMonth = currentMonth,
+                selectedDate = selectedDate,
+                onDateSelected = { selectedDate = it },
+                eventosPorFecha = eventosPorFecha
+            )
+            CalendarMode.WEEK -> SemanaLista(eventosPorFecha)
+            CalendarMode.DAY -> EventosDiarios(
+                selectedDate = selectedDate,
+                eventos = eventosPorFecha[selectedDate].orEmpty()
+            )
+        }
     }
 }
 
@@ -60,7 +74,8 @@ fun CalendarioScreen(modifier: Modifier = Modifier) {
 private fun CalendarHeader(
     currentMonth: YearMonth,
     onPreviousMonth: () -> Unit,
-    onNextMonth: () -> Unit
+    onNextMonth: () -> Unit,
+    onModeChanged: (CalendarMode) -> Unit
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -70,18 +85,30 @@ private fun CalendarHeader(
         IconButton(onClick = onPreviousMonth) {
             Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, "Mes anterior")
         }
-
         Text(
             text = currentMonth.format(DateTimeFormatter.ofPattern("MMMM yyyy", Locale("es"))),
             style = MaterialTheme.typography.titleLarge
         )
-
         IconButton(onClick = onNextMonth) {
             Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, "Mes siguiente")
         }
     }
 
-    // Días de la semana
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceEvenly
+    ) {
+        Button(onClick = { onModeChanged(CalendarMode.MONTH) }) {
+            Text("Mes")
+        }
+        Button(onClick = { onModeChanged(CalendarMode.WEEK) }) {
+            Text("Semana")
+        }
+        Button(onClick = { onModeChanged(CalendarMode.DAY) }) {
+            Text("Día")
+        }
+    }
+
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceEvenly
@@ -102,7 +129,8 @@ private fun CalendarHeader(
 private fun CalendarGrid(
     currentMonth: YearMonth,
     selectedDate: LocalDate,
-    onDateSelected: (LocalDate) -> Unit
+    onDateSelected: (LocalDate) -> Unit,
+    eventosPorFecha: Map<LocalDate, List<String>>
 ) {
     val firstDayOfMonth = currentMonth.atDay(1)
     val lastDayOfMonth = currentMonth.atEndOfMonth()
@@ -120,13 +148,47 @@ private fun CalendarGrid(
         columns = GridCells.Fixed(7),
         modifier = Modifier.fillMaxWidth()
     ) {
-        items(daysInCalendar) { date ->
+        gridItems(daysInCalendar) { date ->
             DayCell(
                 date = date,
                 isSelected = date == selectedDate,
                 isCurrentMonth = date.month == currentMonth.month,
                 onDateSelected = onDateSelected
             )
+        }
+    }
+
+    val eventosSeleccionados = eventosPorFecha[selectedDate].orEmpty()
+    EventosDiarios(selectedDate = selectedDate, eventos = eventosSeleccionados)
+}
+
+@Composable
+private fun SemanaLista(eventosPorFecha: Map<LocalDate, List<String>>) {
+    val hoy = LocalDate.now()
+    val diasAmostrar = buildList {
+        var actual = hoy
+        while (actual.dayOfWeek.value != 7) {
+            add(actual)
+            actual = actual.plusDays(1)
+        }
+        add(actual)
+    }
+
+    LazyColumn(modifier = Modifier.fillMaxSize()) {
+        items(diasAmostrar) { dia ->
+            Text(
+                text = dia.format(DateTimeFormatter.ofPattern("EEEE d 'de' MMMM", Locale("es"))),
+                style = MaterialTheme.typography.titleMedium
+            )
+            val eventos = eventosPorFecha[dia].orEmpty()
+            if (eventos.isEmpty()) {
+                Text("No hay eventos")
+            } else {
+                eventos.forEach { evento ->
+                    Text("\\- $evento")
+                }
+            }
+            Divider(modifier = Modifier.padding(vertical = 8.dp))
         }
     }
 }
@@ -143,10 +205,7 @@ private fun DayCell(
             .aspectRatio(1f)
             .padding(2.dp)
             .background(
-                when {
-                    isSelected -> MaterialTheme.colorScheme.primary
-                    else -> Color.Transparent
-                }
+                if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent
             )
             .clickable { onDateSelected(date) },
         contentAlignment = Alignment.Center
@@ -163,7 +222,7 @@ private fun DayCell(
 }
 
 @Composable
-private fun EventosDiarios(selectedDate: LocalDate) {
+private fun EventosDiarios(selectedDate: LocalDate, eventos: List<String>) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -176,11 +235,19 @@ private fun EventosDiarios(selectedDate: LocalDate) {
             modifier = Modifier.padding(16.dp)
         ) {
             Text(
-                text = "Eventos para ${selectedDate.format(DateTimeFormatter.ofPattern("d 'de' MMMM 'de' yyyy", Locale("es")))}",
+                text = "Eventos para " + selectedDate.format(
+                    DateTimeFormatter.ofPattern("d 'de' MMMM 'de' yyyy", Locale("es"))
+                ),
                 style = MaterialTheme.typography.titleMedium
             )
             Spacer(modifier = Modifier.height(8.dp))
-            // Aquí puedes agregar la lista de eventos para la fecha seleccionada
+            if (eventos.isEmpty()) {
+                Text("No hay eventos agendados")
+            } else {
+                eventos.forEach { evento ->
+                    Text("\\* $evento")
+                }
+            }
         }
     }
 }

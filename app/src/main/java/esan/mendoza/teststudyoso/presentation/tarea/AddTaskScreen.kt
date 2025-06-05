@@ -129,7 +129,7 @@ fun AddTaskScreen(
                     readOnly = true,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .menuAnchor(),
+                        ,
                     trailingIcon = {
                         ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandidoCurso)
                     },

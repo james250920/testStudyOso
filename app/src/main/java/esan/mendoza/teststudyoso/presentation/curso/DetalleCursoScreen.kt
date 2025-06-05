@@ -150,7 +150,6 @@ fun DetalleCursoScreen(
                 onScreenSelected = onScreenSelected,
                 modifier = Modifier.fillMaxWidth()
             )
-            PromedioTotal()
             Spacer(modifier = Modifier.height(32.dp))
         }
     } ?: run {
@@ -249,46 +248,7 @@ private fun CursoInfo(
 
 
 
-@Composable
-private fun PromedioTotal() {
-    Box(
-        modifier = Modifier.fillMaxWidth(),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Text(
-                text = "Promedio Total",
-                style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-            Card(
-                modifier = Modifier
-                    .size(150.dp)
-                    .aspectRatio(1f),
-                shape = CircleShape,
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-            ) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "5.4/20",
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                }
-            }
-        }
-    }
-}
+
 ///section tipo de pruebas
 @Composable
 internal fun PruebasSection(
@@ -327,19 +287,42 @@ internal fun PruebasSection(
             }
         }
 
-        Row(
-            modifier = Modifier
-                .horizontalScroll(scrollState)
-                .padding(horizontal = 4.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            tiposPrueba.forEach { tipo ->
-                TipoPruebaCard(
-                    tipoPrueba = tipo,
-                    modifier = Modifier.width(200.dp),
-                    onEdit = { tipoPruebaSeleccionado = tipo },
-                    onDelete = { onEliminarTipoPrueba(tipo) }
+        if (tiposPrueba.isEmpty()) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(100.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer
                 )
+            ) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "No hay pruebas agregadas",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+        } else {
+            Row(
+                modifier = Modifier
+                    .horizontalScroll(scrollState)
+                    .padding(horizontal = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                tiposPrueba.forEach { tipo ->
+                    TipoPruebaCard(
+                        tipoPrueba = tipo,
+                        modifier = Modifier.width(200.dp),
+                        onEdit = { tipoPruebaSeleccionado = tipo },
+                        onDelete = { onEliminarTipoPrueba(tipo) }
+                    )
+                }
             }
         }
 
@@ -643,22 +626,45 @@ internal fun HorarioSection(
             color = MaterialTheme.colorScheme.onSurface
         )
 
-        Row(
-            modifier = Modifier
-                .horizontalScroll(scrollState)
-                .padding(horizontal = 4.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            horarios.forEach { horario ->
-                HorarioCard(
-                    dia = horario.diaSemana,
-                    horaInicio = horario.horaInicio,
-                    horaFin = horario.horaFin,
-                    aula = horario.aula,
-                    modifier = Modifier.width(160.dp),
-                    onEdit = { horarioSeleccionado = horario },
-                    onDelete = { onEliminarHorario(horario) }
+        if (horarios.isEmpty()) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(100.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer
                 )
+            ) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "No hay horarios agregados",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+        } else {
+            Row(
+                modifier = Modifier
+                    .horizontalScroll(scrollState)
+                    .padding(horizontal = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                horarios.forEach { horario ->
+                    HorarioCard(
+                        dia = horario.diaSemana,
+                        horaInicio = horario.horaInicio,
+                        horaFin = horario.horaFin,
+                        aula = horario.aula,
+                        modifier = Modifier.width(160.dp),
+                        onEdit = { horarioSeleccionado = horario },
+                        onDelete = { onEliminarHorario(horario) }
+                    )
+                }
             }
         }
 

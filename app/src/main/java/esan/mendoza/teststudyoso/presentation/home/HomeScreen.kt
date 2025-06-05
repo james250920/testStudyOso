@@ -277,7 +277,7 @@ fun Home(
                     )
 
                     selectedScreen == "Calendario" -> CalendarioScreen(
-                        modifier = Modifier.padding(innerPadding)
+                        modifier = Modifier.padding(innerPadding),
                     )
                     selectedScreen == "Configuración" -> ConfiguracionScreen(
                         modifier = Modifier.padding(innerPadding)
@@ -320,7 +320,7 @@ fun Home(
                     }
                     selectedScreen == "Principal" -> PrincipalScreen(
                         modifier = Modifier.padding(innerPadding),
-                        onScreenSelected = { screen -> selectedScreen = screen }
+                        onScreenSelected = { screen -> selectedScreen = screen },
                     )
                     selectedScreen.startsWith("SimuladoCalificacion") -> {
                         val cursoId = selectedScreen.substringAfter("SimuladoCalificacion/").toIntOrNull()
