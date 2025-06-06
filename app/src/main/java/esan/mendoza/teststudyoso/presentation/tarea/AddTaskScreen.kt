@@ -12,10 +12,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import esan.mendoza.teststudyoso.R
+
 import esan.mendoza.teststudyoso.ViewModel.curso.CursoViewModel
 import esan.mendoza.teststudyoso.ViewModel.curso.CursoViewModelFactory
 import esan.mendoza.teststudyoso.ViewModel.tarea.TareaViewModel
@@ -88,7 +88,8 @@ fun AddTaskScreen(
             confirmButton = {
                 TextButton(onClick = {
                     datePickerState.selectedDateMillis?.let { millis ->
-                        val formatter = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+                        val formatter =
+                            java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
                         fechaVencimiento = formatter.format(java.util.Date(millis))
                     }
                     showDatePicker = false
@@ -105,174 +106,180 @@ fun AddTaskScreen(
             DatePicker(state = datePickerState)
         }
     }
-
-    Scaffold(
-        modifier = modifier,
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(padding)
-                .padding(16.dp)
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.Start
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+            .verticalScroll(rememberScrollState()),
+        horizontalAlignment = Alignment.Start
+    ) {
+        Text(
+            text = "Agregar Tarea",
+            style = MaterialTheme.typography.headlineMedium,
+            modifier = Modifier.padding(vertical = 16.dp),
+            textAlign = TextAlign.Center
+        )
+        // Dropdown Cursos
+        ExposedDropdownMenuBox(
+            expanded = expandidoCurso,
+            onExpandedChange = { expandidoCurso = it }
         ) {
-            Text(text = "Curso", style = MaterialTheme.typography.bodyLarge)
-            ExposedDropdownMenuBox(
-                expanded = expandidoCurso,
-                onExpandedChange = { expandidoCurso = it }
-            ) {
-                OutlinedTextField(
-                    value = cursoSeleccionado?.nombreCurso ?: "",
-                    onValueChange = {},
-                    readOnly = true,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        ,
-                    trailingIcon = {
-                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandidoCurso)
-                    },
-                    label = { Text("Seleccionar") }
-                )
-                ExposedDropdownMenu(
-                    expanded = expandidoCurso,
-                    onDismissRequest = { expandidoCurso = false }
-                ) {
-                    cursos.forEach { curso ->
-                        DropdownMenuItem(
-                            text = { Text(curso.nombreCurso) },
-                            onClick = {
-                                cursoSeleccionado = curso
-                                expandidoCurso = false
-                            }
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text(text = "Descripción de la tarea", style = MaterialTheme.typography.bodyLarge)
             OutlinedTextField(
-                value = descripcionTarea,
-                onValueChange = { descripcionTarea = it },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                placeholder = { Text(text = "Descripción de la tarea") }
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text(text = "¿Es importante?", style = MaterialTheme.typography.bodyLarge)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Start,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                val opcionesImportante = listOf("Sí" to true, "No" to false)
-                opcionesImportante.forEach { (texto, valor) ->
-                    Row(
-                        modifier = Modifier
-                            .selectable(selected = esImportante == valor, onClick = { esImportante = valor })
-                            .padding(end = 16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        RadioButton(selected = esImportante == valor, onClick = { esImportante = valor })
-                        Text(text = texto)
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text(text = "¿Es urgente?", style = MaterialTheme.typography.bodyLarge)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Start,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                val opcionesUrgente = listOf("Sí" to true, "No" to false)
-                opcionesUrgente.forEach { (texto, valor) ->
-                    Row(
-                        modifier = Modifier
-                            .selectable(selected = esUrgente == valor, onClick = { esUrgente = valor })
-                            .padding(end = 16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        RadioButton(selected = esUrgente == valor, onClick = { esUrgente = valor })
-                        Text(text = texto)
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text(text = "Fecha de vencimiento", style = MaterialTheme.typography.bodyLarge)
-            OutlinedTextField(
-                value = fechaVencimiento,
-                onValueChange = { fechaVencimiento = it },
-                label = { Text("Fecha de vencimiento") },
-                modifier = Modifier.fillMaxWidth(),
+                value = cursoSeleccionado?.nombreCurso ?: "",
+                onValueChange = {},
                 readOnly = true,
-                trailingIcon = {
-                    IconButton(onClick = { showDatePicker = true }) {
-                        Icon(
-                            imageVector = Icons.Default.DateRange,
-                            contentDescription = "Seleccionar fecha"
-                        )
-                    }
-                }
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Button(
-                onClick = {
-                    when {
-                        cursoSeleccionado == null -> {
-                            errorMessage = "Selecciona un curso"
-                            showError = true
-                        }
-                        descripcionTarea.isBlank() -> {
-                            errorMessage = "La descripción es obligatoria"
-                            showError = true
-                        }
-                        esImportante == null -> {
-                            errorMessage = "Indica si la tarea es importante"
-                            showError = true
-                        }
-                        esUrgente == null -> {
-                            errorMessage = "Indica si la tarea es urgente"
-                            showError = true
-                        }
-                        fechaVencimiento.isBlank() -> {
-                            errorMessage = "Selecciona la fecha de vencimiento"
-                            showError = true
-                        }
-                        else -> {
-                            val nuevaTarea = Tarea(
-                                descripcion = descripcionTarea.trim(),
-                                esImportante = esImportante!!,
-                                esUrgente = esUrgente!!,
-                                fechaVencimiento = fechaVencimiento,
-                                fechaCreacion = LocalDate.now().toString(),
-                                estado = "Pendiente",
-                                idUsuario = usuarioId,
-                                idCurso = cursoSeleccionado!!.idCurso
-                            )
-                            tareaViewModel.agregarTarea(nuevaTarea)
-                            onScreenSelected("ListTaskScreen")
-                        }
-                    }
-                },
+                label = { Text("Seleccionar Curso") },
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandidoCurso) },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(48.dp)
+                    .menuAnchor()
+            )
+            ExposedDropdownMenu(
+                expanded = expandidoCurso,
+                onDismissRequest = { expandidoCurso = false }
             ) {
-                Text(text = "Guardar")
+                cursos.forEach { curso ->
+                    DropdownMenuItem(
+                        text = { Text(curso.nombreCurso) },
+                        onClick = {
+                            cursoSeleccionado = curso
+                            expandidoCurso = false
+                        }
+                    )
+                }
             }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        OutlinedTextField(
+            value = descripcionTarea,
+            onValueChange = { descripcionTarea = it },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            placeholder = { Text(text = "Descripción de la tarea") }
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(text = "¿Es importante?", style = MaterialTheme.typography.bodyLarge)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Start,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            val opcionesImportante = listOf("Sí" to true, "No" to false)
+            opcionesImportante.forEach { (texto, valor) ->
+                Row(
+                    modifier = Modifier
+                        .selectable(
+                            selected = esImportante == valor,
+                            onClick = { esImportante = valor })
+                        .padding(end = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    RadioButton(
+                        selected = esImportante == valor,
+                        onClick = { esImportante = valor })
+                    Text(text = texto)
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(text = "¿Es urgente?", style = MaterialTheme.typography.bodyLarge)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Start,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            val opcionesUrgente = listOf("Sí" to true, "No" to false)
+            opcionesUrgente.forEach { (texto, valor) ->
+                Row(
+                    modifier = Modifier
+                        .selectable(selected = esUrgente == valor, onClick = { esUrgente = valor })
+                        .padding(end = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    RadioButton(selected = esUrgente == valor, onClick = { esUrgente = valor })
+                    Text(text = texto)
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        OutlinedTextField(
+            value = fechaVencimiento,
+            onValueChange = { fechaVencimiento = it },
+            label = { Text("Fecha de vencimiento") },
+            modifier = Modifier.fillMaxWidth(),
+            readOnly = true,
+            trailingIcon = {
+                IconButton(onClick = { showDatePicker = true }) {
+                    Icon(
+                        imageVector = Icons.Default.DateRange,
+                        contentDescription = "Seleccionar fecha"
+                    )
+                }
+            }
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Button(
+            onClick = {
+                when {
+                    cursoSeleccionado == null -> {
+                        errorMessage = "Selecciona un curso"
+                        showError = true
+                    }
+
+                    descripcionTarea.isBlank() -> {
+                        errorMessage = "La descripción es obligatoria"
+                        showError = true
+                    }
+
+                    esImportante == null -> {
+                        errorMessage = "Indica si la tarea es importante"
+                        showError = true
+                    }
+
+                    esUrgente == null -> {
+                        errorMessage = "Indica si la tarea es urgente"
+                        showError = true
+                    }
+
+                    fechaVencimiento.isBlank() -> {
+                        errorMessage = "Selecciona la fecha de vencimiento"
+                        showError = true
+                    }
+
+                    else -> {
+                        val nuevaTarea = Tarea(
+                            descripcion = descripcionTarea.trim(),
+                            esImportante = esImportante!!,
+                            esUrgente = esUrgente!!,
+                            fechaVencimiento = fechaVencimiento,
+                            fechaCreacion = LocalDate.now().toString(),
+                            estado = "Pendiente",
+                            idUsuario = usuarioId,
+                            idCurso = cursoSeleccionado!!.idCurso
+                        )
+                        tareaViewModel.agregarTarea(nuevaTarea)
+                        onScreenSelected("ListTaskScreen")
+                    }
+                }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp)
+        ) {
+            Text(text = "Guardar")
         }
     }
 }
+
+
 

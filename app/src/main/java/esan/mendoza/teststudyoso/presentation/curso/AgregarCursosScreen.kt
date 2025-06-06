@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import esan.mendoza.teststudyoso.ViewModel.curso.CursoViewModel
@@ -67,169 +68,161 @@ fun AgregarCursosScreen(
             showError = false
         }
     }
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+            .background(MaterialTheme.colorScheme.background)
+            .verticalScroll(scrollState),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "Agregar Curso",
+            style = MaterialTheme.typography.headlineMedium,
+            modifier = Modifier.padding(vertical = 16.dp),
+            textAlign = TextAlign.Center
+        )
 
-    Scaffold(
-        modifier = modifier,
-        topBar = {
-            TopAppBar(
-                title = { Text("Agregar Nuevo Curso") },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary
-                )
-            )
-        },
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
-    ) { padding ->
-        Column(
+        Spacer(modifier = Modifier.height(4.dp))
+
+        InputField(
+            label = "Nombre del Curso",
+            value = nombreCurso,
+            onValueChange = { nombreCurso = it }
+        )
+
+        Row(
             modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-                .verticalScroll(scrollState)
-                .padding(padding)
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            InputField(
-                label = "Nombre del Curso",
-                value = nombreCurso,
-                onValueChange = { nombreCurso = it }
+            Text(
+                text = "Color del curso",
+                color = MaterialTheme.colorScheme.onBackground
             )
-
-            Row(
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Color del curso",
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .background(selectedColor, CircleShape)
-                        .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
-                        .clickable { showColorPicker = true }
-                )
-            }
-
-            InputField(
-                label = "Profesor",
-                value = profesor,
-                onValueChange = { profesor = it }
+                    .size(40.dp)
+                    .background(selectedColor, CircleShape)
+                    .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
+                    .clickable { showColorPicker = true }
             )
+        }
 
-            InputField(
-                label = "Créditos",
-                value = creditos,
-                onValueChange = { creditos = it },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+        InputField(
+            label = "Profesor",
+            value = profesor,
+            onValueChange = { profesor = it }
+        )
+
+        InputField(
+            label = "Créditos",
+            value = creditos,
+            onValueChange = { creditos = it },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+        )
+
+        ExposedDropdownMenuBox(
+            expanded = expandedModalidad,
+            onExpandedChange = { expandedModalidad = it },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp)
+        ) {
+            OutlinedTextField(
+                value = aula,
+                onValueChange = {},
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedModalidad) },
+                modifier = Modifier
+                    .menuAnchor()
+                    .fillMaxWidth(),
+                label = { Text("Modalidad") }
             )
-
-            ExposedDropdownMenuBox(
+            ExposedDropdownMenu(
                 expanded = expandedModalidad,
-                onExpandedChange = { expandedModalidad = it },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp)
+                onDismissRequest = { expandedModalidad = false }
             ) {
-                OutlinedTextField(
-                    value = aula,
-                    onValueChange = {},
-                    readOnly = true,
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedModalidad) },
-                    modifier = Modifier
-                        .menuAnchor()
-                        .fillMaxWidth(),
-                    label = { Text("Modalidad") }
-                )
-                ExposedDropdownMenu(
-                    expanded = expandedModalidad,
-                    onDismissRequest = { expandedModalidad = false }
-                ) {
-                    modalidades.forEach { modalidad ->
-                        DropdownMenuItem(
-                            text = { Text(modalidad) },
-                            onClick = {
-                                aula = modalidad
-                                expandedModalidad = false
-                            }
-                        )
-                    }
-                }
-            }
-
-            Button(
-                onClick = {
-                    if (nombreCurso.isBlank()) {
-                        errorMessage = "El nombre del curso es obligatorio"
-                        showError = true
-                        return@Button
-                    }
-
-                    val creditosInt = creditos.toIntOrNull()
-                    if (creditosInt == null && creditos.isNotEmpty()) {
-                        errorMessage = "Los créditos deben ser un número válido"
-                        showError = true
-                        return@Button
-                    }
-
-                    isLoading = true
-                    try {
-                        val curso = Curso(
-                            nombreCurso = nombreCurso.trim(), // Cambiar nombreCurso por nombre
-                            color = "#" + Integer.toHexString(selectedColor.toArgb())
-                                .uppercase().substring(2),
-                            profesor = profesor.trim(),
-                            creditos = creditosInt ?: 0,
-                            aula = aula.trim(),
-                            idUsuario = usuarioId
-                        )
-
-                        cursoViewModel.agregarCurso(curso)
-                        onScreenSelected("lisCurso")
-                    } catch (e: Exception) {
-                        errorMessage = "Error al guardar el curso"
-                        showError = true
-                    } finally {
-                        isLoading = false
-                    }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 16.dp),
-                enabled = !isLoading
-            ) {
-                if (isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        color = MaterialTheme.colorScheme.onPrimary
+                modalidades.forEach { modalidad ->
+                    DropdownMenuItem(
+                        text = { Text(modalidad) },
+                        onClick = {
+                            aula = modalidad
+                            expandedModalidad = false
+                        }
                     )
-                } else {
-                    Text("Guardar Curso")
                 }
             }
         }
 
-        if (showColorPicker) {
-            ColorPickerDialog(
-                showDialog = true,
-                initialColor = selectedColor,
-                onColorSelected = {
-                    selectedColor = it
-                    showColorPicker = false
-                },
-                onDismiss = { showColorPicker = false }
-            )
+        Button(
+            onClick = {
+                if (nombreCurso.isBlank()) {
+                    errorMessage = "El nombre del curso es obligatorio"
+                    showError = true
+                    return@Button
+                }
+
+                val creditosInt = creditos.toIntOrNull()
+                if (creditosInt == null && creditos.isNotEmpty()) {
+                    errorMessage = "Los créditos deben ser un número válido"
+                    showError = true
+                    return@Button
+                }
+
+                isLoading = true
+                try {
+                    val curso = Curso(
+                        nombreCurso = nombreCurso.trim(), // Cambiar nombreCurso por nombre
+                        color = "#" + Integer.toHexString(selectedColor.toArgb())
+                            .uppercase().substring(2),
+                        profesor = profesor.trim(),
+                        creditos = creditosInt ?: 0,
+                        aula = aula.trim(),
+                        idUsuario = usuarioId
+                    )
+
+                    cursoViewModel.agregarCurso(curso)
+                    onScreenSelected("lisCurso")
+                } catch (e: Exception) {
+                    errorMessage = "Error al guardar el curso"
+                    showError = true
+                } finally {
+                    isLoading = false
+                }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 16.dp),
+            enabled = !isLoading
+        ) {
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
+            } else {
+                Text("Guardar Curso")
+            }
         }
     }
+
+    if (showColorPicker) {
+        ColorPickerDialog(
+            showDialog = true,
+            initialColor = selectedColor,
+            onColorSelected = {
+                selectedColor = it
+                showColorPicker = false
+            },
+            onDismiss = { showColorPicker = false }
+        )
+    }
 }
+
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

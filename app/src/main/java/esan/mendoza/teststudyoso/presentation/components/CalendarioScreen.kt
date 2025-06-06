@@ -113,7 +113,7 @@ private fun CalendarHeader(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
-        val daysOfWeek = listOf("Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom")
+        val daysOfWeek = listOf("Dom","Lun", "Mar", "Mié", "Jue", "Vie", "Sáb")
         daysOfWeek.forEach { day ->
             Text(
                 text = day,
@@ -152,6 +152,7 @@ private fun CalendarGrid(
             DayCell(
                 date = date,
                 isSelected = date == selectedDate,
+                isToday = date == LocalDate.now(), // Aquí destacamos el día actual
                 isCurrentMonth = date.month == currentMonth.month,
                 onDateSelected = onDateSelected
             )
@@ -197,6 +198,7 @@ private fun SemanaLista(eventosPorFecha: Map<LocalDate, List<String>>) {
 private fun DayCell(
     date: LocalDate,
     isSelected: Boolean,
+    isToday: Boolean,  // Variable para destacar el día actual
     isCurrentMonth: Boolean,
     onDateSelected: (LocalDate) -> Unit
 ) {
@@ -205,7 +207,11 @@ private fun DayCell(
             .aspectRatio(1f)
             .padding(2.dp)
             .background(
-                if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent
+                when {
+                    isSelected -> MaterialTheme.colorScheme.primary
+                    isToday -> MaterialTheme.colorScheme.secondary // Día actual con color especial
+                    else -> Color.Transparent
+                }
             )
             .clickable { onDateSelected(date) },
         contentAlignment = Alignment.Center
@@ -214,6 +220,7 @@ private fun DayCell(
             text = date.dayOfMonth.toString(),
             color = when {
                 isSelected -> MaterialTheme.colorScheme.onPrimary
+                isToday -> MaterialTheme.colorScheme.onSecondary // Texto en color diferente para hoy
                 !isCurrentMonth -> MaterialTheme.colorScheme.onBackground.copy(alpha = 0.38f)
                 else -> MaterialTheme.colorScheme.onBackground
             }

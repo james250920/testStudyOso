@@ -129,6 +129,7 @@ fun Home(
                     )
                 },
                 bottomBar = {
+
                     NavigationBar(
                         containerColor = MaterialTheme.colorScheme.primary,
                         contentColor = MaterialTheme.colorScheme.onPrimary
