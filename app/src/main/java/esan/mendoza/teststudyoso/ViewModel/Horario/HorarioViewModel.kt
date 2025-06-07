@@ -14,6 +14,13 @@ class HorarioViewModel(private val repository: HorarioRepository) : ViewModel() 
     private val _horarios = MutableStateFlow<List<Horario>>(emptyList())
     val horarios: StateFlow<List<Horario>> = _horarios.asStateFlow()
 
+    fun cargarTodosLosHorarios() {
+        viewModelScope.launch {
+            repository.getAllHorarios().collect { lista ->
+                _horarios.value = lista
+            }
+        }
+    }
     // Cargar horarios para un curso específico
     fun cargarHorarios(cursoId: Int) {
         viewModelScope.launch {

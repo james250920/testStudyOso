@@ -12,4 +12,7 @@ class HorarioRepository(private val dao: HorarioDao) {
     suspend fun update(horario: Horario) = dao.update(horario)
 
     suspend fun delete(horario: Horario) = dao.delete(horario)
+
+    fun getAllHorarios(): Flow<List<Horario>> = dao.getAllHorarios()
+
 }

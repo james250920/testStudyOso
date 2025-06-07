@@ -13,16 +13,30 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import esan.mendoza.teststudyoso.ViewModel.Horario.HorarioViewModel
+import esan.mendoza.teststudyoso.ViewModel.Horario.HorarioViewModelFactory
+import esan.mendoza.teststudyoso.ViewModel.curso.CursoViewModel
+import esan.mendoza.teststudyoso.ViewModel.curso.CursoViewModelFactory
+import esan.mendoza.teststudyoso.data.db.AppDatabase
+import esan.mendoza.teststudyoso.data.entities.Curso
+import esan.mendoza.teststudyoso.data.repositories.HorarioRepository
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.time.temporal.WeekFields
+import java.time.DayOfWeek
 import java.util.Locale
+import esan.mendoza.teststudyoso.data.entities.Horario
+import esan.mendoza.teststudyoso.data.repositories.CursoRepository
+import kotlin.collections.set
 
 enum class CalendarMode {
     MONTH, WEEK, DAY
@@ -30,14 +44,44 @@ enum class CalendarMode {
 
 @Composable
 fun CalendarioScreen(modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    val db = remember { AppDatabase.getInstance(context) }
+
+    val horarioRepository = remember { HorarioRepository(db.HorarioDao()) }
+    val horarioViewModel: HorarioViewModel = viewModel(factory = HorarioViewModelFactory(horarioRepository))
+    val horarios by horarioViewModel.horarios.collectAsState()
+
+    val cursoRepository = remember { CursoRepository(db.CursoDao()) }
+    val cursoViewModel: CursoViewModel = viewModel(
+        factory = CursoViewModelFactory(cursoRepository)
+    )
+    var curso by remember { mutableStateOf<Curso?>(null) }
+
+
+    // Cargar todos los horarios al iniciar
+    LaunchedEffect(key1 = Unit) {
+        horarioViewModel.cargarTodosLosHorarios()
+    }
+
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
     var currentMonth by remember { mutableStateOf(YearMonth.now()) }
     var calendarMode by remember { mutableStateOf(CalendarMode.MONTH) }
 
-    val eventosPorFecha = mapOf(
-        LocalDate.now() to listOf("Revisión de código", "Reunión de proyecto"),
-        LocalDate.now().plusDays(1) to emptyList()
+    // Mapeador de días de la semana (inglés -> español)
+    val diaMapper = mapOf(
+        "MONDAY" to "LUNES",
+        "TUESDAY" to "MARTES",
+        "WEDNESDAY" to "MIÉRCOLES",
+        "THURSDAY" to "JUEVES",
+        "FRIDAY" to "VIERNES",
+        "SATURDAY" to "SÁBADO",
+        "SUNDAY" to "DOMINGO"
     )
+
+    // Filtrar horarios según el día seleccionado
+    val diaSeleccionadoEn = selectedDate.dayOfWeek.name
+    val diaSeleccionadoEs = diaMapper[diaSeleccionadoEn] ?: diaSeleccionadoEn
+    val horariosFiltrados = horarios.filter { it.diaSemana.equals(diaSeleccionadoEs, ignoreCase = true) }
 
     Column(
         modifier = modifier
@@ -59,13 +103,22 @@ fun CalendarioScreen(modifier: Modifier = Modifier) {
                 currentMonth = currentMonth,
                 selectedDate = selectedDate,
                 onDateSelected = { selectedDate = it },
-                eventosPorFecha = eventosPorFecha
+                horarios = horarios,
+                diaMapper = diaMapper,
+                cursoViewModel = cursoViewModel
             )
-            CalendarMode.WEEK -> SemanaLista(eventosPorFecha)
-            CalendarMode.DAY -> EventosDiarios(
-                selectedDate = selectedDate,
-                eventos = eventosPorFecha[selectedDate].orEmpty()
+            CalendarMode.WEEK -> SemanaLista(
+                horarios = horarios,
+                diaMapper = diaMapper,
+                cursoViewModel = cursoViewModel
             )
+            CalendarMode.DAY -> {
+                EventosDiarios(
+                    selectedDate = selectedDate,
+                    horarios = horariosFiltrados,
+                    cursoViewModel = cursoViewModel
+                )
+            }
         }
     }
 }
@@ -130,7 +183,9 @@ private fun CalendarGrid(
     currentMonth: YearMonth,
     selectedDate: LocalDate,
     onDateSelected: (LocalDate) -> Unit,
-    eventosPorFecha: Map<LocalDate, List<String>>
+    horarios: List<Horario>,
+    diaMapper: Map<String, String>,
+    cursoViewModel : CursoViewModel
 ) {
     val firstDayOfMonth = currentMonth.atDay(1)
     val lastDayOfMonth = currentMonth.atEndOfMonth()
@@ -152,43 +207,98 @@ private fun CalendarGrid(
             DayCell(
                 date = date,
                 isSelected = date == selectedDate,
-                isToday = date == LocalDate.now(), // Aquí destacamos el día actual
+                isToday = date == LocalDate.now(),
                 isCurrentMonth = date.month == currentMonth.month,
                 onDateSelected = onDateSelected
             )
         }
     }
 
-    val eventosSeleccionados = eventosPorFecha[selectedDate].orEmpty()
-    EventosDiarios(selectedDate = selectedDate, eventos = eventosSeleccionados)
+    // Filtrar horarios para el día seleccionado
+    val diaSeleccionadoEn = selectedDate.dayOfWeek.name
+    val diaSeleccionadoEs = diaMapper[diaSeleccionadoEn] ?: diaSeleccionadoEn
+    val horariosFiltrados = horarios.filter { it.diaSemana.equals(diaSeleccionadoEs, ignoreCase = true) }
+
+    EventosDiarios(
+        selectedDate = selectedDate,
+        horarios = horariosFiltrados,
+        cursoViewModel = cursoViewModel
+
+    )
 }
 
 @Composable
-private fun SemanaLista(eventosPorFecha: Map<LocalDate, List<String>>) {
+private fun SemanaLista(
+    horarios: List<Horario>,
+    diaMapper: Map<String, String>,
+    cursoViewModel: CursoViewModel
+) {
+    val cursosMap = remember { mutableStateMapOf<Int, Curso?>() }
     val hoy = LocalDate.now()
-    val diasAmostrar = buildList {
-        var actual = hoy
-        while (actual.dayOfWeek.value != 7) {
-            add(actual)
-            actual = actual.plusDays(1)
-        }
-        add(actual)
-    }
+    val inicioSemana = hoy.with(DayOfWeek.MONDAY)
 
+    val diasSemana = (0..6).map { inicioSemana.plusDays(it.toLong()) }
+    LaunchedEffect(horarios) {
+        horarios.forEach { horario ->
+            val curso = cursoViewModel.getCursoById(horario.idCurso)
+            cursosMap[horario.idCurso] = curso
+        }
+    }
     LazyColumn(modifier = Modifier.fillMaxSize()) {
-        items(diasAmostrar) { dia ->
+        items(diasSemana) { dia ->
+            val diaEn = dia.dayOfWeek.name
+            val diaEs = diaMapper[diaEn] ?: diaEn
+            val horariosDia = horarios.filter { it.diaSemana.equals(diaEs, ignoreCase = true) }
+
             Text(
                 text = dia.format(DateTimeFormatter.ofPattern("EEEE d 'de' MMMM", Locale("es"))),
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(top = 12.dp, bottom = 4.dp)
             )
-            val eventos = eventosPorFecha[dia].orEmpty()
-            if (eventos.isEmpty()) {
-                Text("No hay eventos")
+
+            if (horariosDia.isEmpty()) {
+                Text("No hay horarios registrados",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(start = 8.dp)
+                )
             } else {
-                eventos.forEach { evento ->
-                    Text("\\- $evento")
+                horariosDia.forEach { horario ->
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = cursosMap[horario.idCurso]?.color?.let { colorString ->
+                                try {
+                                    Color(android.graphics.Color.parseColor(colorString))
+                                } catch (e: Exception) {
+                                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+                                }
+                            } ?: MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+                        )
+                    ) {
+                        Column(modifier = Modifier.padding(8.dp)) {
+                            Text(
+                                text = cursosMap[horario.idCurso]?.nombreCurso ?: "Cargando...",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            Text(
+                                text = "${horario.horaInicio} - ${horario.horaFin}",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            Text(
+                                text = "Aula: ${horario.aula}",
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                            Text(
+                                text = ("Modalidad: " + cursosMap[horario.idCurso]?.aula),
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                    }
                 }
             }
+
             Divider(modifier = Modifier.padding(vertical = 8.dp))
         }
     }
@@ -198,7 +308,7 @@ private fun SemanaLista(eventosPorFecha: Map<LocalDate, List<String>>) {
 private fun DayCell(
     date: LocalDate,
     isSelected: Boolean,
-    isToday: Boolean,  // Variable para destacar el día actual
+    isToday: Boolean,
     isCurrentMonth: Boolean,
     onDateSelected: (LocalDate) -> Unit
 ) {
@@ -209,7 +319,7 @@ private fun DayCell(
             .background(
                 when {
                     isSelected -> MaterialTheme.colorScheme.primary
-                    isToday -> MaterialTheme.colorScheme.secondary // Día actual con color especial
+                    isToday -> MaterialTheme.colorScheme.secondary
                     else -> Color.Transparent
                 }
             )
@@ -220,7 +330,7 @@ private fun DayCell(
             text = date.dayOfMonth.toString(),
             color = when {
                 isSelected -> MaterialTheme.colorScheme.onPrimary
-                isToday -> MaterialTheme.colorScheme.onSecondary // Texto en color diferente para hoy
+                isToday -> MaterialTheme.colorScheme.onSecondary
                 !isCurrentMonth -> MaterialTheme.colorScheme.onBackground.copy(alpha = 0.38f)
                 else -> MaterialTheme.colorScheme.onBackground
             }
@@ -229,11 +339,26 @@ private fun DayCell(
 }
 
 @Composable
-private fun EventosDiarios(selectedDate: LocalDate, eventos: List<String>) {
+private fun EventosDiarios(
+    selectedDate: LocalDate,
+    horarios: List<Horario>,
+    cursoViewModel: CursoViewModel
+) {
+    // Mapa para almacenar los cursos obtenidos
+    val cursosMap = remember { mutableStateMapOf<Int, Curso?>() }
+
+    // Obtener los cursos para todos los horarios mostrados
+    LaunchedEffect(horarios) {
+        horarios.forEach { horario ->
+            val curso = cursoViewModel.getCursoById(horario.idCurso)
+            cursosMap[horario.idCurso] = curso
+        }
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(200.dp),
+            .padding(vertical = 8.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
         )
@@ -242,17 +367,53 @@ private fun EventosDiarios(selectedDate: LocalDate, eventos: List<String>) {
             modifier = Modifier.padding(16.dp)
         ) {
             Text(
-                text = "Eventos para " + selectedDate.format(
+                text = "Horarios para " + selectedDate.format(
                     DateTimeFormatter.ofPattern("d 'de' MMMM 'de' yyyy", Locale("es"))
                 ),
                 style = MaterialTheme.typography.titleMedium
             )
             Spacer(modifier = Modifier.height(8.dp))
-            if (eventos.isEmpty()) {
-                Text("No hay eventos agendados")
+            if (horarios.isEmpty()) {
+                Text("No hay horarios registrados")
             } else {
-                eventos.forEach { evento ->
-                    Text("\\* $evento")
+                LazyColumn(
+                    modifier = Modifier.height(200.dp)
+                ) {
+                    items(horarios) { horario ->
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = cursosMap[horario.idCurso]?.color?.let { colorString ->
+                                    try {
+                                        Color(android.graphics.Color.parseColor(colorString))
+                                    } catch (e: Exception) {
+                                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+                                    }
+                                } ?: MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+                            )
+                        ) {
+                            Column(modifier = Modifier.padding(8.dp)) {
+                                Text(
+                                    text = cursosMap[horario.idCurso]?.nombreCurso ?: "Cargando...",
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                                Text(
+                                    text = "${horario.horaInicio} - ${horario.horaFin}",
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                                Text(
+                                    text = "Aula: ${horario.aula}",
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                                Text(
+                                    text = ("Modalidad: " + cursosMap[horario.idCurso]?.aula),
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }

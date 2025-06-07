@@ -18,4 +18,7 @@ interface HorarioDao {
 
     @Query("SELECT * FROM Horarios WHERE id_curso = :cursoId")
     fun getHorariosByCurso(cursoId: Int): Flow<List<Horario>>
+
+    @Query("SELECT * FROM Horarios")
+    fun getAllHorarios(): Flow<List<Horario>>
 }
