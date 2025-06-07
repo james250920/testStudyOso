@@ -1,12 +1,17 @@
 package esan.mendoza.teststudyoso.presentation.home
 
+import android.graphics.Color.parseColor
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddToPhotos
@@ -43,7 +48,9 @@ import esan.mendoza.teststudyoso.data.repositories.CursoRepository
 import esan.mendoza.teststudyoso.data.repositories.HorarioRepository
 import java.time.format.DateTimeFormatter
 import androidx.compose.runtime.*
+import androidx.compose.ui.text.style.TextOverflow
 import java.util.Locale
+import androidx.core.graphics.toColorInt
 
 // Constante para el color de los íconos
 private val IconColor = Color(0xFF3355ff)
@@ -101,13 +108,14 @@ private fun EventosDelDiaCard(
     val cursoRepository = remember { CursoRepository(db.CursoDao()) }
     val cursoViewModel: CursoViewModel = viewModel(factory = CursoViewModelFactory(cursoRepository))
 
-    // Estado para día seleccionado
-    var selectedDay by remember { mutableStateOf(0) } // 0 = hoy, 1 = mañana
+    // Estado para día seleccionado y expansión
+    var selectedDay by remember { mutableIntStateOf(0) } // 0 = hoy, 1 = mañana
+    var expandido by remember { mutableStateOf(false) }
 
     // Obtener fechas
     val hoy = LocalDate.now()
-    val mañana = hoy.plusDays(1)
-    val fechaSeleccionada = if (selectedDay == 0) hoy else mañana
+    val manana = hoy.plusDays(1)
+    val fechaSeleccionada = if (selectedDay == 0) hoy else manana
 
     // Mapeo de días de la semana
     val diaMapper = mapOf(
@@ -127,7 +135,7 @@ private fun EventosDelDiaCard(
     // Filtrar horarios para el día seleccionado
     val horariosFiltrados = horarios.filter {
         it.diaSemana.equals(diaEs, ignoreCase = true)
-    }
+    }.sortedBy { it.horaInicio }
 
     // Estado para almacenar cursos
     val cursosMap = remember { mutableStateMapOf<Int, Curso?>() }
@@ -147,10 +155,22 @@ private fun EventosDelDiaCard(
         }
     }
 
+    // Calcular la altura dinámica
+    val alturaBase = 5.dp  // Altura mínima para el encabezado y botones
+    val alturaMaxima = 168.dp  // Altura máxima permitida
+    val alturaItem = 76.dp  // Altura aproximada de cada item de horario
+
+    // Calcular altura según contenido
+    val alturaContenido = when {
+        horariosFiltrados.isEmpty() -> if (expandido) 90.dp else 10.dp
+        else -> minOf(alturaMaxima, alturaBase + (horariosFiltrados.size * alturaItem.value).dp)
+    }
+
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(14.dp),
+            .padding(10.dp)
+            .clickable { expandido = !expandido },
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
         ),
@@ -161,6 +181,7 @@ private fun EventosDelDiaCard(
                 .padding(10.dp)
                 .fillMaxWidth()
         ) {
+            // Encabezado de la tarjeta
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -171,6 +192,7 @@ private fun EventosDelDiaCard(
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(24.dp)
                 )
+                Spacer(modifier = Modifier.width(2.dp))
                 Text(
                     text = "Horario para ${if (selectedDay == 0) "hoy" else "mañana"}:",
                     style = MaterialTheme.typography.titleSmall,
@@ -196,159 +218,164 @@ private fun EventosDelDiaCard(
                 }
             }
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
-            ) {
-                // Botón Hoy
-                Button(
-                    onClick = { selectedDay = 0 },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (selectedDay == 0)
-                            MaterialTheme.colorScheme.primary
-                        else
-                            MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = if (selectedDay == 0)
-                            MaterialTheme.colorScheme.onPrimary
-                        else
-                            MaterialTheme.colorScheme.onPrimaryContainer
-                    ),
-                    modifier = Modifier.weight(1f)
+            // Botones de selección de día (solo visibles si está expandido o hay horarios)
+            AnimatedVisibility(visible = expandido || horariosFiltrados.isNotEmpty()) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
                 ) {
-                    Text(
-                        text = "Hoy, " + hoy.format(
-                            DateTimeFormatter.ofPattern("d 'de' MMMM", Locale("pe"))
+                    // Botón Hoy
+                    Button(
+                        onClick = { selectedDay = 0 },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (selectedDay == 0)
+                                MaterialTheme.colorScheme.primary
+                            else
+                                MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = if (selectedDay == 0)
+                                MaterialTheme.colorScheme.onPrimary
+                            else
+                                MaterialTheme.colorScheme.onPrimaryContainer
                         ),
-                        style = MaterialTheme.typography.labelSmall
-                    )
-                }
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(
+                            text = "Hoy, " + hoy.format(
+                                DateTimeFormatter.ofPattern("d 'de' MMMM", Locale("es"))
+                            ),
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    }
 
-                Spacer(modifier = Modifier.width(10.dp))
+                    Spacer(modifier = Modifier.width(10.dp))
 
-                // Botón Mañana
-                Button(
-                    onClick = { selectedDay = 1 },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (selectedDay == 1)
-                            MaterialTheme.colorScheme.primary
-                        else
-                            MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = if (selectedDay == 1)
-                            MaterialTheme.colorScheme.onPrimary
-                        else
-                            MaterialTheme.colorScheme.onPrimaryContainer
-                    ),
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text(
-                        text = "Mañana, " + mañana.format(
-                            DateTimeFormatter.ofPattern("d 'de' MMMM", Locale("pe"))
+                    // Botón Mañana
+                    Button(
+                        onClick = { selectedDay = 1 },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (selectedDay == 1)
+                                MaterialTheme.colorScheme.primary
+                            else
+                                MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = if (selectedDay == 1)
+                                MaterialTheme.colorScheme.onPrimary
+                            else
+                                MaterialTheme.colorScheme.onPrimaryContainer
                         ),
-                        style = MaterialTheme.typography.labelSmall
-                    )
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(
+                            text = "Mañana, " + manana.format(
+                                DateTimeFormatter.ofPattern("d 'de' MMMM", Locale("es"))
+                            ),
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    }
                 }
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            if (horariosFiltrados.isEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(160.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = "No hay horarios para ${if (selectedDay == 0) "hoy" else "mañana"}",
-                            style = MaterialTheme.typography.bodyLarge,
-                            textAlign = TextAlign.Center
-                        )
-                        TextButton(onClick = onViewAllClick) {
-                            Text("Ver calendario completo")
+            // Contenido dinámico
+            AnimatedVisibility(visible = expandido || horariosFiltrados.isNotEmpty()) {
+                if (horariosFiltrados.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(80.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = "No hay horarios para ${if (selectedDay == 0) "hoy" else "mañana"}",
+                                style = MaterialTheme.typography.bodyLarge,
+                                textAlign = TextAlign.Center
+                            )
                         }
                     }
-                }
-            } else {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(160.dp)
-                        .padding(vertical = 4.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                    contentPadding = PaddingValues(horizontal = 4.dp)
-                ) {
-                    items(horariosFiltrados.size) { index ->
-                        val horario = horariosFiltrados[index]
-                        val curso = cursosMap[horario.idCurso]
+                } else {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(alturaContenido - alturaBase)
+                            .padding(vertical = 4.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                        contentPadding = PaddingValues(horizontal = 4.dp)
+                    ) {
+                        items(horariosFiltrados.size) { index ->
+                            val horario = horariosFiltrados[index]
+                            val curso = cursosMap[horario.idCurso]
+                            val colorCurso = curso?.color ?.toString()
 
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 2.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = curso?.color?.let { colorString ->
-                                    try {
-                                        Color(android.graphics.Color.parseColor(colorString))
-                                    } catch (e: Exception) {
-                                        MaterialTheme.colorScheme.surface
-                                    }
-                                } ?: MaterialTheme.colorScheme.surface
-                            )
-                        ) {
-                            Row(
+                            Card(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(8.dp),
-                                verticalAlignment = Alignment.CenterVertically
+                                    .padding(vertical = 2.dp)
+                                    .border(
+                                        width = 2.dp,
+                                        color = Color(colorCurso?.toColorInt() ?: "#FFBB86FC".toColorInt()),
+                                        shape = MaterialTheme.shapes.small
+                                    ),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.surface
+                                ),
                             ) {
-                                // Horario
-                                Column(
-                                    modifier = Modifier.width(90.dp)
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Text(
-                                        text = horario.horaInicio,
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-                                    Text(
-                                        text = horario.horaFin,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-
-                                Spacer(modifier = Modifier.width(16.dp))
-
-                                // Información del curso
-                                Column(
-                                    modifier = Modifier.weight(1f)
-                                ) {
-                                    Text(
-                                        text = curso?.nombreCurso ?: "Cargando...",
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                    // Horario
+                                    Column(
+                                        modifier = Modifier.width(90.dp)
+                                    ) {
                                         Text(
-                                            text = "Modalidad: ${curso?.aula ?: "Desconocida"}",
+                                            text = horario.horaInicio,
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                        Text(
+                                            text = horario.horaFin,
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
                                     }
 
-                                    Text(
-                                        text = "Aula: ${horario.aula}",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
+                                    Spacer(modifier = Modifier.width(16.dp))
+
+                                    // Información del curso
+                                    Column(
+                                        modifier = Modifier.weight(1f)
+
+                                    ) {
+                                        Text(
+                                            text = curso?.nombreCurso ?: "Cargando...",
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                            modifier = Modifier
+                                                .padding(horizontal = 2.dp)
+                                            ,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Text(
+                                                text = "Modalidad: ${curso?.aula ?: "Desconocida"}",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+
+                                        Text(
+                                            text = "Aula: ${horario.aula}",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
                                 }
                             }
-                        }
-
-                        if (index < horariosFiltrados.size - 1) {
-                            Spacer(modifier = Modifier.height(2.dp))
                         }
                     }
                 }
@@ -356,7 +383,6 @@ private fun EventosDelDiaCard(
         }
     }
 }
-
 @Composable
 private fun MenuOpciones(onScreenSelected: (String) -> Unit) {
     Row(

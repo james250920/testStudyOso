@@ -123,7 +123,7 @@ fun Home(
                             }
                         },
                         colors = TopAppBarDefaults.topAppBarColors(
-                            containerColor = MaterialTheme.colorScheme.primary,
+                            containerColor = Color(0xFF3355ff),
                             titleContentColor = MaterialTheme.colorScheme.onPrimary
                         )
                     )
@@ -131,7 +131,7 @@ fun Home(
                 bottomBar = {
 
                     NavigationBar(
-                        containerColor = MaterialTheme.colorScheme.primary,
+                        containerColor = Color(0xFF3355ff),
                         contentColor = MaterialTheme.colorScheme.onPrimary
                     ) {
                         NavigationBarItem(

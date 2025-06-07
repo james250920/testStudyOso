@@ -1,6 +1,8 @@
 package esan.mendoza.teststudyoso.presentation.components
 
+import android.graphics.Color.parseColor
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -20,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.core.graphics.toColorInt
 import androidx.lifecycle.viewmodel.compose.viewModel
 import esan.mendoza.teststudyoso.ViewModel.Horario.HorarioViewModel
 import esan.mendoza.teststudyoso.ViewModel.Horario.HorarioViewModelFactory
@@ -37,6 +40,7 @@ import java.util.Locale
 import esan.mendoza.teststudyoso.data.entities.Horario
 import esan.mendoza.teststudyoso.data.repositories.CursoRepository
 import kotlin.collections.set
+import kotlin.toString
 
 enum class CalendarMode {
     MONTH, WEEK, DAY
@@ -56,6 +60,7 @@ fun CalendarioScreen(modifier: Modifier = Modifier) {
         factory = CursoViewModelFactory(cursoRepository)
     )
     var curso by remember { mutableStateOf<Curso?>(null) }
+    val colorCurso = curso?.color ?.toString()
 
 
     // Cargar todos los horarios al iniciar
@@ -266,16 +271,16 @@ private fun SemanaLista(
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 4.dp),
+                            .padding(vertical = 4.dp)
+                            .border(
+                                width = 2.dp,
+                                color = Color(cursosMap[horario.idCurso]?.color?.toString()?.toColorInt() ?: "#FFBB86FC".toColorInt()),
+                                shape = MaterialTheme.shapes.small
+                            )
+                        ,
                         colors = CardDefaults.cardColors(
-                            containerColor = cursosMap[horario.idCurso]?.color?.let { colorString ->
-                                try {
-                                    Color(android.graphics.Color.parseColor(colorString))
-                                } catch (e: Exception) {
-                                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
-                                }
-                            } ?: MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
-                        )
+                            containerColor = MaterialTheme.colorScheme.surface
+                        ),
                     ) {
                         Column(modifier = Modifier.padding(8.dp)) {
                             Text(
@@ -346,7 +351,6 @@ private fun EventosDiarios(
 ) {
     // Mapa para almacenar los cursos obtenidos
     val cursosMap = remember { mutableStateMapOf<Int, Curso?>() }
-
     // Obtener los cursos para todos los horarios mostrados
     LaunchedEffect(horarios) {
         horarios.forEach { horario ->
@@ -354,6 +358,7 @@ private fun EventosDiarios(
             cursosMap[horario.idCurso] = curso
         }
     }
+    val colorCurso = cursosMap.values.firstOrNull()?.color?.toString()
 
     Card(
         modifier = Modifier
@@ -383,16 +388,16 @@ private fun EventosDiarios(
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 4.dp),
+                                .padding(vertical = 4.dp)
+                                .border(
+                                    width = 2.dp,
+                                    color = Color(cursosMap[horario.idCurso]?.color?.toString()?.toColorInt() ?: "#FFBB86FC".toColorInt()),
+                                    shape = MaterialTheme.shapes.small
+                                ),
+
                             colors = CardDefaults.cardColors(
-                                containerColor = cursosMap[horario.idCurso]?.color?.let { colorString ->
-                                    try {
-                                        Color(android.graphics.Color.parseColor(colorString))
-                                    } catch (e: Exception) {
-                                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
-                                    }
-                                } ?: MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
-                            )
+                                containerColor = MaterialTheme.colorScheme.surface
+                            ),
                         ) {
                             Column(modifier = Modifier.padding(8.dp)) {
                                 Text(

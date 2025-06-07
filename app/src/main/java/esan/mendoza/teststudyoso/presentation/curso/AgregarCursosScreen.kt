@@ -313,7 +313,7 @@ private fun SimpleColorPicker(
 ) {
     val colors = listOf(
         Color.Red, Color.Blue, Color.Green,
-        Color.Yellow, Color.Cyan, Color.Magenta,
+        Color(0xFFf60a87), Color.Cyan, Color.Magenta,
         Color.Gray, Color.DarkGray, Color.LightGray,
         Color(0xFF6200EE), Color(0xFF03DAC5), Color(0xFFFFC107),
         Color(0xFFFF5722), Color(0xFF9C27B0), Color(0xFF2196F3),
