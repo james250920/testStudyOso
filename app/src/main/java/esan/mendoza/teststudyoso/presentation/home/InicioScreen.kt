@@ -77,7 +77,9 @@ fun PrincipalScreen(
         )
 
         Spacer(modifier = Modifier.height(16.dp))
+        MenuOpciones(onScreenSelected)
 
+        Spacer(modifier = Modifier.height(16.dp))
         Image(
             painter = painterResource(id = R.drawable.study),
             contentDescription = "Imagen de fondo",
@@ -86,9 +88,6 @@ fun PrincipalScreen(
                 .height(165.dp)
                 .padding(bottom = 16.dp)
         )
-
-        // Menú de opciones
-        MenuOpciones(onScreenSelected)
     }
 }
 
