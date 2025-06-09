@@ -149,4 +149,12 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.ui.test.junit4)
+    //Workmanager
+    val work_version = "2.10.1"
+    implementation("androidx.work:work-runtime-ktx:$work_version")
+    implementation("androidx.work:work-runtime-ktx:2.10.1")
+    implementation ("androidx.compose.ui:ui:1.8.2")
+    implementation ("androidx.compose.material:material:1.8.2")
+    implementation ("androidx.compose.ui:ui-tooling-preview:1.8.2")
+    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.1")
 }

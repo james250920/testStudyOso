@@ -20,4 +20,7 @@ interface TareaDao {
 
     @Query("SELECT * FROM Tareas WHERE id_curso = :cursoId")
     fun getTareasByCurso(cursoId: Int): Flow<List<Tarea>>
+
+    @Query("SELECT * FROM Tareas")
+    suspend fun getAllTareas(): List<Tarea>
 }

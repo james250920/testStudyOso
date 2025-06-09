@@ -14,4 +14,5 @@ class TareaRepository(private val dao: TareaDao) {
     suspend fun update(tarea: Tarea) = dao.update(tarea)
 
     suspend fun delete(tarea: Tarea) = dao.delete(tarea)
+    suspend fun getAllTareas(): List<Tarea> = dao.getAllTareas()
 }

@@ -53,4 +53,11 @@ class TareaViewModel(private val repository: TareaRepository) : ViewModel() {
             repository.delete(tarea)
         }
     }
+
+    // Carga todas las tareas (opcional)
+    fun cargarTodasLasTareas() {
+        viewModelScope.launch {
+            _tareas.value = repository.getAllTareas()
+        }
+    }
 }
