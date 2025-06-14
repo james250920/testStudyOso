@@ -55,7 +55,7 @@ fun StudyOsoLandingScreen(
             )
 
             Text(
-                text = "StudyOso aplicación que revolucionara tu organización " +
+                text = "StudyOso aplicación que revolucionará tu organización " +
                         "planificando las horas, asegurando que no te pierdas ninguna tarea " +
                         "y ayudando a gestionar tu vida académica " +
                         "de forma eficiente.",
